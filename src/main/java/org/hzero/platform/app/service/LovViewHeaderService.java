@@ -2,6 +2,7 @@ package org.hzero.platform.app.service;
 
 import java.util.List;
 
+import org.hzero.platform.api.dto.LovViewAggregateDTO;
 import org.hzero.platform.domain.entity.LovViewHeader;
 import org.hzero.platform.domain.vo.LovViewVO;
 
@@ -22,7 +23,19 @@ public interface LovViewHeaderService {
      * @param tenantId 租户ID
      * @return Lov视图
      */
-    LovViewVO queryLovViewInfo(String viewCode, Long tenantId);
+    default LovViewVO queryLovViewInfo(String viewCode, Long tenantId, String lang){
+        return queryLovViewInfo(viewCode, tenantId, lang, false);
+    }
+
+    /**
+     * 查找Lov视图
+     *
+     * @param viewCode 视图代码
+     * @param tenantId 租户ID
+     * @param onlyPublic 是否查询公开值集标识
+     * @return Lov视图
+     */
+    LovViewVO queryLovViewInfo(String viewCode, Long tenantId, String lang, boolean onlyPublic);
 
     /**
      * 条件查询Lov视图头
@@ -67,4 +80,21 @@ public interface LovViewHeaderService {
      * @param siteFlag     平台标识
      */
     void copyLovView(Long tenantId, String viewCode, Long viewHeaderId, Integer siteFlag);
+
+    /**
+     * 删除值集视图
+     *
+     * @param lovViewHeader 删除的数据
+     */
+    void deleteLovViewHeader(LovViewHeader lovViewHeader);
+
+    /**
+     * 聚合获取值集视图头行信息
+     *
+     * @param viewCode  视图编码
+     * @param tenantId  租户Id
+     * @param lang      语言
+     * @return 查询结果
+     */
+    LovViewAggregateDTO queryLovViewAggregate(String viewCode, Long tenantId, String lang);
 }

@@ -1,9 +1,10 @@
 package org.hzero.platform.app.service;
 
-import java.util.List;
-
+import org.hzero.platform.api.dto.EventRuleDTO;
 import org.hzero.platform.domain.entity.Event;
 import org.hzero.platform.domain.entity.EventRule;
+
+import java.util.List;
 
 /**
  * 事件应用服务
@@ -14,7 +15,7 @@ public interface EventService {
 
     /**
      * 创建事件
-     * 
+     *
      * @param event 事件
      * @return
      */
@@ -37,15 +38,15 @@ public interface EventService {
 
     /**
      * 批量删除事件
-     * 
+     *
      * @param events 事件
      */
     void batchRemove(List<Event> events);
 
     /**
      * 创建事件规则
-     * 
-     * @param eventId 事件ID
+     *
+     * @param eventId   事件ID
      * @param eventRule 事件规则
      * @return 事件规则
      */
@@ -54,7 +55,7 @@ public interface EventService {
     /**
      * 修改事件规则
      *
-     * @param eventId 事件ID
+     * @param eventId   事件ID
      * @param eventRule 事件规则
      * @return 事件规则
      */
@@ -62,11 +63,18 @@ public interface EventService {
 
     /**
      * 批量删除事件规则
-     * 
-     * @param eventId 事件ID
+     *
+     * @param eventId    事件ID
      * @param eventRules 事件规则ID集合
      */
     void batchRemoveEventRule(Long eventId, List<EventRule> eventRules);
 
-
+    /**
+     * 批量操作
+     *
+     * @param eventId    事件ID
+     * @param eventRules 待操作的事件规则
+     * @return 操作结果数据
+     */
+    List<EventRuleDTO> batch(Long eventId, List<EventRule> eventRules);
 }

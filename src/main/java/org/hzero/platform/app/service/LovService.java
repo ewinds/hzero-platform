@@ -1,11 +1,12 @@
 package org.hzero.platform.app.service;
 
-import org.apache.commons.collections4.CollectionUtils;
-import org.hzero.platform.domain.entity.Lov;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.hzero.platform.api.dto.LovAggregateDTO;
+import org.hzero.platform.domain.entity.Lov;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 值集应用服务
@@ -22,8 +23,8 @@ public interface LovService {
      * @param tenantId 租户ID
      * @return lov基本信息, 无权访问时返回null
      */
-    default Lov queryLovInfo(String lovCode, Long tenantId) {
-        return queryLovInfo(lovCode, tenantId, false);
+    default Lov queryLovInfo(String lovCode, Long tenantId, String lang) {
+        return queryLovInfo(lovCode, tenantId, lang, false);
     }
 
     /**
@@ -33,7 +34,7 @@ public interface LovService {
      * @param tenantId 租户ID
      * @return lov基本信息, 无权访问时返回null
      */
-    Lov queryLovInfo(String lovCode, Long tenantId, boolean onlyPublic);
+    Lov queryLovInfo(String lovCode, Long tenantId, String lang, boolean onlyPublic);
 
     /**
      * 集成查询值集数据
@@ -96,8 +97,8 @@ public interface LovService {
      * @param tenantId 租户ID
      * @return 查询结果, 如果无权访问返回null
      */
-    default String queryLovSql(String lovCode, Long tenantId) {
-        return queryLovSql(lovCode, tenantId, false);
+    default String queryLovSql(String lovCode, Long tenantId, String lang) {
+        return queryLovSql(lovCode, tenantId, lang, false);
     }
 
     /**
@@ -107,7 +108,7 @@ public interface LovService {
      * @param tenantId 租户ID
      * @return 查询结果, 如果无权访问返回null
      */
-    String queryLovSql(String lovCode, Long tenantId, boolean onlyPublic);
+    String queryLovSql(String lovCode, Long tenantId, String lang, boolean onlyPublic);
 
     /**
      * 根据lovCode查询SQL
@@ -116,8 +117,8 @@ public interface LovService {
      * @param tenantId 租户ID
      * @return 查询结果, 如果无权访问返回null
      */
-    default String queryLovTranslationSql(String lovCode, Long tenantId) {
-        return queryLovTranslationSql(lovCode, tenantId, false);
+    default String queryLovTranslationSql(String lovCode, Long tenantId, String lang) {
+        return queryLovTranslationSql(lovCode, tenantId, lang, false);
     }
 
 
@@ -128,7 +129,7 @@ public interface LovService {
      * @param tenantId 租户ID
      * @return 查询结果, 如果无权访问返回null
      */
-    String queryLovTranslationSql(String lovCode, Long tenantId, boolean onlyPublic);
+    String queryLovTranslationSql(String lovCode, Long tenantId, String lang, boolean onlyPublic);
 
     /**
      * 插入Lov
@@ -155,4 +156,20 @@ public interface LovService {
      * @param siteFlag 是否是平台级查询
      */
     void copyLov(Long tenantId, String lovCode, Long lovId, Integer siteFlag);
+
+    /**
+     * 系统工具-刷新值集
+     */
+    void initLovCache();
+
+    /**
+     * 聚合获取值集头行数据
+     *
+     * @param lovCode   值集编码
+     * @param tenantId  租户Id
+     * @param lang      语言
+     * @param tag       标记，仅独立值集可作为查询条件
+     * @return 值集头行聚合结果
+     */
+    LovAggregateDTO queryLovAggregateLovValues(String lovCode, Long tenantId, String lang, String tag);
 }

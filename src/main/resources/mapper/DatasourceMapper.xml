@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.hzero.platform.infra.mapper.DatasourceMapper">
-    <delete id="deleteByDatasourceId">
-        DELETE d,ds FROM hpfm_datasource d LEFT JOIN hpfm_datasource_service ds ON d.datasource_id = ds.datasource_id
-        WHERE d.datasource_id = #{datasourceId}
-    </delete>
     <!-- 数据源汇总查询 -->
     <select id="selectDatasources" resultType="org.hzero.platform.domain.entity.Datasource">
         <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()" />
@@ -13,7 +9,7 @@
             hd.tenant_id,
             hd.datasource_code,
             hd.datasource_url,
-            hd.description,
+            hdtl.description,
             hd.remark,
             hd.ds_purpose_code,
             hd.enabled_flag,
@@ -23,7 +19,8 @@
             hd.driver_type,
             httl.tenant_name
         FROM hpfm_datasource hd
-        JOIN hpfm_tenant ht ON hd.tenant_id=ht.tenant_id
+        JOIN hpfm_datasource_tl hdtl ON hdtl.datasource_id = hd.datasource_id AND hdtl.lang = #{lang}
+        JOIN hpfm_tenant ht ON hdtl.tenant_id=ht.tenant_id
         JOIN hpfm_tenant_tl httl ON ht.tenant_id = httl.tenant_id AND httl.lang = #{lang}
         <where>
             <if test="datasource.datasourceCode != null and datasource.datasourceCode != ''">
@@ -36,7 +33,7 @@
             </if>
             <if test="datasource.description != null and datasource.description != ''">
             <bind name="descriptionLike" value="'%' + datasource.description + '%'" />
-                AND hd.description LIKE #{descriptionLike}
+                AND hdtl.description LIKE #{descriptionLike}
             </if>
             <if test="datasource.remark != null and datasource.remark != ''">
             <bind name="remarkLike" value="'%' + datasource.remark + '%'" />
@@ -72,7 +69,7 @@
             hd.tenant_id,
             hd.datasource_code,
             hd.datasource_url,
-            hd.description,
+            hdtl.description,
             hd.driver_class,
             hd.db_pool_type,
             hd.queryer_class,
@@ -85,14 +82,15 @@
             hd.object_version_number,
             hd.db_type,
             httl.tenant_name,
-            hdd.driver_name,
+            hddt.driver_name,
             hd.ext_config,
             hd.datasource_class,
             hd.driver_type,
             hd.driver_id
         FROM hpfm_datasource hd
-        LEFT JOIN hpfm_datasource_driver hdd ON hd.driver_id = hdd.driver_id
-        JOIN hpfm_tenant ht ON hd.tenant_id=ht.tenant_id
+        JOIN hpfm_datasource_tl hdtl ON hdtl.datasource_id = hd.datasource_id AND hdtl.lang = #{lang}
+        LEFT JOIN hpfm_datasource_driver_tl hddt ON hddt.driver_id = hd.driver_id AND hddt.lang = #{lang}
+        JOIN hpfm_tenant ht ON hdtl.tenant_id=ht.tenant_id
         JOIN hpfm_tenant_tl httl ON ht.tenant_id=httl.tenant_id and httl.lang = #{lang}
         WHERE hd.datasource_id = #{datasourceId}
     </select>
@@ -104,7 +102,7 @@
             hd.tenant_id,
             hd.datasource_code,
             hd.datasource_url,
-            hd.description,
+            hdtl.description,
             hd.driver_class,
             hd.db_pool_type,
             hd.queryer_class,
@@ -116,15 +114,16 @@
             hd.password_encrypted,
             hd.enabled_flag,
             hd.object_version_number,
-            hdd.driver_name,
+            hddt.driver_name,
             hd.db_type,
             hd.datasource_class,
             hd.driver_type,
             httl.tenant_name
         FROM hpfm_datasource hd
-        LEFT JOIN hpfm_datasource_driver hdd ON hd.driver_id = hdd.driver_id
-        JOIN hpfm_tenant ht ON hd.tenant_id=ht.tenant_id
-        LEFT JOIN hpfm_tenant_tl httl ON httl.tenant_id=ht.tenant_id and httl.lang = #{lang}
+        JOIN hpfm_datasource_tl hdtl ON hdtl.datasource_id = hd.datasource_id AND hdtl.lang = #{lang}
+        LEFT JOIN hpfm_datasource_driver_tl hddt ON hddt.driver_id = hd.driver_id AND hddt.lang = #{lang}
+        JOIN hpfm_tenant ht ON hdtl.tenant_id=ht.tenant_id
+        JOIN hpfm_tenant_tl httl ON httl.tenant_id=ht.tenant_id and httl.lang = #{lang}
         WHERE hd.datasource_code = #{datasourceCode}
         AND hd.tenant_id = #{tenantId}
     </select>

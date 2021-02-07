@@ -4,27 +4,26 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.validation.constraints.NotNull;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 
-import io.choerodon.mybatis.annotation.MultiLanguage;
-import io.choerodon.mybatis.annotation.MultiLanguageField;
-import io.choerodon.mybatis.domain.AuditDomain;
-import io.choerodon.mybatis.annotation.ModifyAudit;
-import io.choerodon.mybatis.annotation.VersionAudit;
-
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
 import org.hzero.boot.platform.lov.annotation.LovValue;
 import org.hzero.core.util.Regexs;
 import org.hzero.starter.keyencrypt.core.Encrypt;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import io.choerodon.mybatis.annotation.ModifyAudit;
+import io.choerodon.mybatis.annotation.MultiLanguage;
+import io.choerodon.mybatis.annotation.MultiLanguageField;
+import io.choerodon.mybatis.annotation.VersionAudit;
+import io.choerodon.mybatis.domain.AuditDomain;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * 表单配置行
@@ -52,6 +51,7 @@ public class FormLine extends AuditDomain {
     public static final String FIELD_TENANT_ID = "tenantId";
     public static final String FIELD_UPDATABLE_FLAG = "updatableFlag";
     public static final String FIELD_VALUE_CONSTRAINT = "valueConstraint";
+    public static final String FIELD_VALUE_SET = "valueSet";
 
 
     //
@@ -116,6 +116,9 @@ public class FormLine extends AuditDomain {
     @ApiModelProperty("值约束，正则表达式")
     @Length(max = 480)
     private String valueConstraint;
+    @ApiModelProperty("值集/值集视图编码")
+    @Length(max = 80)
+    private String valueSet;
 
     //
     // 非数据库字段
@@ -127,6 +130,14 @@ public class FormLine extends AuditDomain {
     // getter/setter
     // ------------------------------------------------------------------------------
 
+    public String getValueSet() {
+        return valueSet;
+    }
+
+    public FormLine setValueSet(String valueSet) {
+        this.valueSet = valueSet;
+        return this;
+    }
 
     public String getItemTypeMeaning() {
         return itemTypeMeaning;

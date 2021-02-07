@@ -89,7 +89,7 @@
             JOIN hpfm_code_rule_dist crd ON hcr.rule_id = crd.rule_id AND crd.level_value = #{levelValue} AND crd.level_code = #{levelCode} AND crd.enabled_flag = 1
             JOIN hpfm_code_rule_detail hcrd ON crd.rule_dist_id = hcrd.rule_dist_id
             <if test="previousLevelValue != null and previousLevelValue !=''">
-                LEFT JOIN hpfm_code_rule_value hcrv ON hcrv.rule_detail_id = hcrd.rule_detail_id AND crd.level_value = #{previousLevelValue}
+                LEFT JOIN hpfm_code_rule_value hcrv ON hcrv.rule_detail_id = hcrd.rule_detail_id AND hcrv.level_value = #{previousLevelValue} AND hcrv.rule_level = #{previousLevelCode}
             </if>
         WHERE
             hcr.rule_code = #{ruleCode}

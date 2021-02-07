@@ -1,7 +1,10 @@
 package org.hzero.platform.infra.repository.impl;
 
-import io.choerodon.core.exception.CommonException;
-import io.choerodon.mybatis.helper.LanguageHelper;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hzero.common.HZeroCacheKey;
@@ -9,6 +12,7 @@ import org.hzero.common.HZeroConstant;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.core.redis.RedisHelper;
 import org.hzero.mybatis.base.impl.BaseRepositoryImpl;
+import org.hzero.platform.api.dto.LovViewAggregateDTO;
 import org.hzero.platform.app.service.LovService;
 import org.hzero.platform.domain.entity.Lov;
 import org.hzero.platform.domain.entity.LovViewHeader;
@@ -26,10 +30,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import io.choerodon.core.exception.CommonException;
+import io.choerodon.mybatis.helper.LanguageHelper;
 
 /**
  * 值集视图头表仓库实现类
@@ -99,7 +101,7 @@ public class LovViewHeaderRepositoryImpl extends BaseRepositoryImpl<LovViewHeade
             // 没有有效的Lov
             throw new CommonException(BaseConstants.ErrorCode.DATA_NOT_EXISTS);
         }
-        lov = this.lovService.queryLovInfo(lov.getLovCode(), lovViewHeader.getTenantId());
+        lov = this.lovService.queryLovInfo(lov.getLovCode(), lovViewHeader.getTenantId(), null);
         if (lov == null) {
             // Lov无权访问
             throw new CommonException(BaseConstants.ErrorCode.FORBIDDEN);
@@ -173,6 +175,11 @@ public class LovViewHeaderRepositoryImpl extends BaseRepositoryImpl<LovViewHeade
     @Override
     public void refreshCacheExpire(String viewCode, Long tenantId, String lang) {
 
+    }
+
+    @Override
+    public LovViewAggregateDTO selectLovViewAggregate(String viewCode, Long tenantId, String lang) {
+        return lovViewHeaderMapper.selectLovViewAggregate(viewCode, tenantId, lang);
     }
 
 }

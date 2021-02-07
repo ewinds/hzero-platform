@@ -3,27 +3,22 @@ package org.hzero.platform.infra.init;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.lang3.BooleanUtils;
-import org.hzero.boot.platform.encrypt.EncryptRepository;
-import org.hzero.core.message.MessageAccessor;
-import org.hzero.platform.app.service.DatabaseService;
-import org.hzero.platform.app.service.DatasourceInfoService;
-import org.hzero.platform.domain.repository.ConfigRepository;
-import org.hzero.platform.domain.repository.PermissionRangeRepository;
-import org.hzero.platform.domain.repository.ProfileValueRepository;
-import org.hzero.platform.domain.repository.ResponseMessageRepository;
-import org.hzero.platform.domain.service.CodeRuleDomainService;
-import org.hzero.platform.domain.service.PromptDomainService;
-import org.hzero.platform.infra.properties.PlatformProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
 import io.choerodon.mybatis.pagehelper.Dialect;
+
+import org.hzero.boot.platform.encrypt.EncryptRepository;
+import org.hzero.platform.app.service.DatasourceInfoService;
+import org.hzero.platform.domain.repository.*;
+import org.hzero.platform.domain.service.CodeRuleDomainService;
+import org.hzero.platform.domain.service.PromptDomainService;
+import org.hzero.platform.infra.properties.PlatformProperties;
 
 /**
  * <p>
@@ -51,37 +46,41 @@ public class HpfmDataInit implements SmartInitializingSingleton {
 
     private final ResponseMessageRepository responseMessageRepository;
 
-    private final DatabaseService databaseService;
-
     private final DatasourceInfoService datasourceRelService;
 
-    private final EncryptRepository encryptRepositoy;
+    private final EncryptRepository encryptRepository;
+
+    /**
+     * 通用模板仓库对象
+     */
+    private final CommonTemplateRepository commonTemplateRepository;
 
     @Autowired
     public HpfmDataInit(ProfileValueRepository profileValueRepository, ConfigRepository configRepository,
                         PromptDomainService promptDomainService, CodeRuleDomainService codeRuleDomainService,
-                        PermissionRangeRepository permissionRangeRepository, DatabaseService databaseService,
-                        DatasourceInfoService datasourceRelService, PlatformProperties platformProperties,
-                        EncryptRepository encryptRepositoy, ResponseMessageRepository responseMessageRepository,
-                        Dialect dialect) {
+                        PermissionRangeRepository permissionRangeRepository, DatasourceInfoService datasourceRelService,
+                        PlatformProperties platformProperties, EncryptRepository encryptRepository,
+                        ResponseMessageRepository responseMessageRepository,
+                        CommonTemplateRepository commonTemplateRepository, Dialect dialect) {
         this.profileValueRepository = profileValueRepository;
         this.configRepository = configRepository;
         this.promptDomainService = promptDomainService;
         this.codeRuleDomainService = codeRuleDomainService;
         this.permissionRangeRepository = permissionRangeRepository;
-        this.databaseService = databaseService;
         this.datasourceRelService = datasourceRelService;
         this.platformProperties = platformProperties;
-        this.encryptRepositoy = encryptRepositoy;
+        this.encryptRepository = encryptRepository;
         this.responseMessageRepository = responseMessageRepository;
+        this.commonTemplateRepository = commonTemplateRepository;
     }
 
     @Override
     public void afterSingletonsInstantiated() {
-        // 加入消息文件
-        MessageAccessor.addBasenames("classpath:messages/messages_hpfm");
+        initCacheData(false);
+    }
 
-        LOGGER.info("Start init redis cache.");
+    public void initCacheData(boolean forceRefresh) {
+        LOGGER.info("Start init redis cache. forceRefresh: {}", forceRefresh);
 
         // 缓存公钥和私钥
         cacheEncryptKey();
@@ -89,16 +88,33 @@ public class HpfmDataInit implements SmartInitializingSingleton {
         if (!BooleanUtils.isTrue(platformProperties.getInitCache())) {
             return;
         }
-        ExecutorService executorService = Executors.newFixedThreadPool(12, new ThreadFactoryBuilder().setNameFormat("HpfmDataInit-%d").build());
+        ExecutorService executorService =
+                Executors.newFixedThreadPool(12, new ThreadFactoryBuilder().setNameFormat("HpfmDataInit-%d").build());
 
-        executorService.submit(profileValueRepository::initAllProfileValueToRedis);
-        executorService.submit(configRepository::initAllConfigToRedis);
-        executorService.submit(() -> promptDomainService.initAllPromptCacheValue(true));
-        executorService.submit(responseMessageRepository::initAllReturnMessageToRedis);
-        executorService.submit(codeRuleDomainService::initCodeRuleCache);
-        executorService.submit(permissionRangeRepository::initAllData);
-        executorService.submit(databaseService::initAllData);
-        executorService.submit(datasourceRelService::initAllData);
+        if (forceRefresh || platformProperties.getCache().isProfileValue()) {
+            executorService.submit(profileValueRepository::initAllProfileValueToRedis);
+        }
+        if (forceRefresh || platformProperties.getCache().isConfig()) {
+            executorService.submit(configRepository::initAllConfigToRedis);
+        }
+        if (forceRefresh || platformProperties.getCache().isPrompt()) {
+            executorService.submit(() -> promptDomainService.initAllPromptCacheValue(true));
+        }
+        if (forceRefresh || platformProperties.getCache().isReturnMessage()) {
+            executorService.submit(responseMessageRepository::initAllReturnMessageToRedis);
+        }
+        if (forceRefresh || platformProperties.getCache().isCodeRule()) {
+            executorService.submit(codeRuleDomainService::initCodeRuleCache);
+        }
+        if (forceRefresh || platformProperties.getCache().isPermissionRange()) {
+            executorService.submit(permissionRangeRepository::initAllData);
+        }
+        if (forceRefresh || platformProperties.getCache().isDatasource()) {
+            executorService.submit(datasourceRelService::initAllData);
+        }
+        if (forceRefresh || platformProperties.getCache().isCommonTemplate()) {
+            executorService.submit(this.commonTemplateRepository::cacheAll);
+        }
 
         executorService.shutdown();
 
@@ -110,8 +126,9 @@ public class HpfmDataInit implements SmartInitializingSingleton {
      */
     private void cacheEncryptKey() {
         PlatformProperties.Encrypt encrypt = platformProperties.getEncrypt();
-        encryptRepositoy.savePublicKey(encrypt.getPublicKey());
-        encryptRepositoy.savePrivateKey(encrypt.getPrivateKey());
-        LOGGER.info("Init encrypt publicKey and privateKey. \n publicKey is [{}] \n privateKey is [{}]", encrypt.getPublicKey(), encrypt.getPrivateKey());
+        encryptRepository.savePublicKey(encrypt.getPublicKey());
+        encryptRepository.savePrivateKey(encrypt.getPrivateKey());
+        LOGGER.info("Init encrypt publicKey and privateKey. \n publicKey is [{}] \n privateKey is [{}]",
+                        encrypt.getPublicKey(), encrypt.getPrivateKey());
     }
 }

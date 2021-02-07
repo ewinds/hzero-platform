@@ -1,9 +1,13 @@
 package org.hzero.platform.api.controller.v1;
 
-import java.util.List;
-
-import javax.servlet.http.HttpServletResponse;
-
+import io.choerodon.core.domain.Page;
+import io.choerodon.core.iam.ResourceLevel;
+import io.choerodon.mybatis.pagehelper.domain.PageRequest;
+import io.choerodon.swagger.annotation.Permission;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import org.hzero.boot.platform.lov.annotation.ProcessLovValue;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.core.base.BaseController;
@@ -25,15 +29,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import io.choerodon.core.domain.Page;
-import io.choerodon.core.iam.ResourceLevel;
-import io.choerodon.mybatis.pagehelper.domain.PageRequest;
-import io.choerodon.swagger.annotation.Permission;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
+import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  * 事件管理 API
@@ -58,7 +55,7 @@ public class EventController extends BaseController {
     @Permission(level = ResourceLevel.ORGANIZATION)
     @GetMapping
     public ResponseEntity<Page<EventDTO>> list(@PathVariable("organizationId") Long organizationId, String eventCode,
-        String eventDescription, PageRequest pageRequest) {
+                                               String eventDescription, PageRequest pageRequest) {
         EventDTO eventDTO = new EventDTO();
         eventDTO.setEventCode(eventCode);
         eventDTO.setEventDescription(eventDescription);
@@ -101,7 +98,7 @@ public class EventController extends BaseController {
     @ApiOperation(value = "批量删除事件")
     @Permission(level = ResourceLevel.ORGANIZATION)
     @DeleteMapping
-    public ResponseEntity batchRemove(@RequestBody @Encrypt List<Event> events) {
+    public ResponseEntity<Void> batchRemove(@RequestBody @Encrypt List<Event> events) {
         SecurityTokenHelper.validToken(events, false);
         events.forEach(event -> event.validateTenant(eventRepository));
         eventService.batchRemove(events);
@@ -110,7 +107,7 @@ public class EventController extends BaseController {
 
     @ApiOperation(value = "查询事件规则")
     @ApiImplicitParams({@ApiImplicitParam(name = "eventId", value = "事件ID", paramType = "query"),
-        @ApiImplicitParam(name = "eventRuleId", value = "事件规则ID", paramType = "query"),})
+            @ApiImplicitParam(name = "eventRuleId", value = "事件规则ID", paramType = "query"),})
     @Permission(level = ResourceLevel.ORGANIZATION)
     @GetMapping("/{eventId}/rules/{eventRuleId}")
     public ResponseEntity<EventRuleDTO> getEventRule(@PathVariable @Encrypt Long eventId, @PathVariable @Encrypt Long eventRuleId) {
@@ -143,7 +140,7 @@ public class EventController extends BaseController {
     @ApiOperation(value = "批量删除事件规则")
     @Permission(level = ResourceLevel.ORGANIZATION)
     @DeleteMapping("/{eventId}/rules")
-    public ResponseEntity batchRemoveEventRule(@PathVariable @Encrypt Long eventId, @RequestBody @Encrypt List<EventRule> eventRules) {
+    public ResponseEntity<Void> batchRemoveEventRule(@PathVariable @Encrypt Long eventId, @RequestBody @Encrypt List<EventRule> eventRules) {
         SecurityTokenHelper.validToken(eventRules);
         Event event = new Event();
         event.setEventId(eventId);
@@ -151,12 +148,22 @@ public class EventController extends BaseController {
         return Results.success();
     }
 
+    @ApiOperation(value = "批量操作事件规则(新建/更新/删除)")
+    @Permission(level = ResourceLevel.ORGANIZATION)
+    @PostMapping("/{eventId}/rules/batch")
+    public ResponseEntity<List<EventRuleDTO>> batch(@PathVariable @Encrypt Long eventId,
+                                                    @RequestBody @Encrypt List<EventRule> eventRules) {
+        SecurityTokenHelper.validTokenIgnoreInsert(eventRules);
+        this.validList(eventRules);
+        return Results.success(this.eventService.batch(eventId, eventRules));
+    }
+
     @ApiOperation(value = "导出事件规则")
     @Permission(level = ResourceLevel.ORGANIZATION)
     @GetMapping("/export")
     @ExcelExport(EventDTO.class)
     @ProcessLovValue(targetField = BaseConstants.FIELD_BODY)
-    public ResponseEntity export(@PathVariable("organizationId") Long tenantId, @Encrypt EventDTO event, ExportParam exportParam, HttpServletResponse response, PageRequest pageRequest) {
+    public ResponseEntity<List<EventDTO>> export(@PathVariable("organizationId") Long tenantId, @Encrypt EventDTO event, ExportParam exportParam, HttpServletResponse response, PageRequest pageRequest) {
         event.setTenantId(tenantId);
         List<EventDTO> list = eventRepository.export(event, exportParam, pageRequest);
         return Results.success(list);

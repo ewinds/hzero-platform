@@ -113,7 +113,7 @@ public class PromptRepositoryImpl extends BaseRepositoryImpl<Prompt> implements 
         if (promptKeys != null && promptKeys.length > 0) {
             for (String promptKey : promptKeys) {
                 if (tenantId == null || tenantId == 0) {
-                    String cacheKey = Prompt.generateCacheKey(promptKey, lang, tenantId);
+                    String cacheKey = Prompt.generateCacheKey(promptKey, lang, BaseConstants.DEFAULT_TENANT_ID);
                     map.putAll(redisHelper.hshGetAll(cacheKey));
                 } else {
                     // 租户级多语言cacheKey
@@ -146,6 +146,7 @@ public class PromptRepositoryImpl extends BaseRepositoryImpl<Prompt> implements 
      * @return 替换后的描述
      */
     private String replacePromptDescription(String description, Long tenantId, String lang) {
+        tenantId = tenantId == null ? BaseConstants.DEFAULT_TENANT_ID : tenantId;
         String replaceValue = description.trim();
         int index = replaceValue.indexOf(CONNECTOR);
         if (replaceValue.startsWith(START_WITH) && replaceValue.endsWith(END_WITH) && index != -1) {

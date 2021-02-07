@@ -38,6 +38,7 @@ public class AuditLoginRepositoryImpl extends BaseRepositoryImpl<AuditLogin> imp
     }
 
     @Override
+    @ProcessLovValue
     public List<AuditLogin> listAuditLogin(AuditLogin auditLogin) {
         return auditLoginMapper.listAuditLogin(auditLogin);
     }

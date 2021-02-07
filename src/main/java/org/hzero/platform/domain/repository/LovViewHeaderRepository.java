@@ -3,11 +3,12 @@
  */
 package org.hzero.platform.domain.repository;
 
+import java.util.List;
+
 import org.hzero.mybatis.base.BaseRepository;
+import org.hzero.platform.api.dto.LovViewAggregateDTO;
 import org.hzero.platform.domain.entity.LovViewHeader;
 import org.hzero.platform.domain.vo.LovViewVO;
-
-import java.util.List;
 
 /**
  * 值集视图头表仓库
@@ -109,4 +110,14 @@ public interface LovViewHeaderRepository extends BaseRepository<LovViewHeader> {
      * @param lang     语言
      */
     void refreshCacheExpire(String viewCode, Long tenantId, String lang);
+
+    /**
+     * 聚合获取值集视图头行信息
+     *
+     * @param viewCode  视图编码
+     * @param tenantId  租户Id
+     * @param lang      语言
+     * @return 查询结果
+     */
+    LovViewAggregateDTO selectLovViewAggregate(String viewCode, Long tenantId, String lang);
 }

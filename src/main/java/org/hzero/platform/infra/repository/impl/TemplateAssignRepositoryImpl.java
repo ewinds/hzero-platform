@@ -9,13 +9,11 @@ import org.hzero.mybatis.base.impl.BaseRepositoryImpl;
 import org.hzero.mybatis.domian.Condition;
 import org.hzero.mybatis.util.Sqls;
 import org.hzero.platform.api.dto.TemplateAssignDTO;
-import org.hzero.platform.domain.entity.CommonTemplate;
 import org.hzero.platform.domain.entity.TemplateAssign;
 import org.hzero.platform.domain.repository.TemplateAssignRepository;
 import org.hzero.platform.infra.mapper.TemplateAssignMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 import java.util.List;
 

@@ -1,7 +1,5 @@
 package org.hzero.platform.domain.entity;
 
-import java.util.List;
-
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -9,7 +7,7 @@ import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 
-import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
 import org.hzero.boot.platform.ds.vo.DatasourceVO;
@@ -21,8 +19,6 @@ import org.hzero.mybatis.annotation.DataSecurity;
 import org.hzero.mybatis.domian.Condition;
 import org.hzero.mybatis.util.Sqls;
 import org.hzero.platform.domain.repository.DatasourceRepository;
-import org.hzero.platform.domain.repository.DatasourceServiceRepository;
-import org.hzero.platform.infra.constant.Constants;
 import org.hzero.platform.infra.constant.FndConstants;
 import org.hzero.starter.keyencrypt.core.Encrypt;
 import org.springframework.beans.BeanUtils;
@@ -31,6 +27,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.choerodon.core.exception.CommonException;
 import io.choerodon.mybatis.annotation.ModifyAudit;
+import io.choerodon.mybatis.annotation.MultiLanguage;
+import io.choerodon.mybatis.annotation.MultiLanguageField;
 import io.choerodon.mybatis.annotation.VersionAudit;
 import io.choerodon.mybatis.domain.AuditDomain;
 
@@ -47,6 +45,7 @@ import io.swagger.annotations.ApiModelProperty;
 @ModifyAudit
 @Table(name = "hpfm_datasource")
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@MultiLanguage
 public class Datasource extends AuditDomain {
     public static final String FIELD_DATASOURCE_ID = "datasourceId";
     public static final String FIELD_DATASOURCE_CODE = "datasourceCode";
@@ -68,6 +67,8 @@ public class Datasource extends AuditDomain {
     public static final String FIELD_DRIVER_ID = "driverId";
     public static final String FIELD_DRIVER_TYPE = "driverType";
     public static final String FIELD_DATASOURCE_CLASS = "datasourceClass";
+
+    public static final String DS_PURPOSE_LOV_CODE = "HPFM.DATASOURCE_PURPOSE";
 
 
 
@@ -95,41 +96,17 @@ public class Datasource extends AuditDomain {
     /**
      * 刷新缓存
      *
-     * @param datasourceServiceRepository DatasourceServiceRepository
      * @param redisHelper                 RedisHelper
      */
-    public void refreshCache(DatasourceServiceRepository datasourceServiceRepository, RedisHelper redisHelper) {
+    public void refreshCache(RedisHelper redisHelper) {
         if (BaseConstants.Flag.YES.equals(enabledFlag)) {
-            if (Constants.Datasource.DATA_SOURCE_PURPOSE_DT.equals(dsPurposeCode)) {
-                // 数据分发用途
-                //获取datasourceId 对应的serviceName列表
-                List<DatasourceService> databaseServices =
-                        datasourceServiceRepository.select(DatasourceService.FIELD_DATASOURCE_ID, datasourceId);
-                if (CollectionUtils.isNotEmpty(databaseServices)) {
-                    databaseServices.stream().map(DatasourceService::getServiceName).forEach(serviceName ->
-                            Datasource.pushRedis(this, redisHelper, serviceName)
-                    );
-                }
-            } else {
-                Datasource.pushRedis(this, redisHelper, null);
+            String[] dsPurposeCodes = dsPurposeCode.split(BaseConstants.Symbol.COMMA);
+            for (String purposeCode : dsPurposeCodes) {
+                Datasource.pushRedis(this, redisHelper, purposeCode);
             }
         } else {
             // 禁用状态删除缓存
-            this.clearCacheAllByDatasourceId(redisHelper, datasourceServiceRepository, datasourceId);
-        }
-    }
-
-    /**
-     * 根据服务名列表删除缓存
-     *
-     * @param redisHelper  RedisHelper
-     * @param serviceNames 服务名列表
-     */
-    public void clearCacheByServiceNames(RedisHelper redisHelper, List<String> serviceNames) {
-        if (CollectionUtils.isEmpty(serviceNames)) {
-            redisHelper.delKey(Datasource.generateKey(null, dsPurposeCode, tenantId, datasourceCode));
-        } else {
-            serviceNames.forEach(serviceName -> redisHelper.delKey(Datasource.generateKey(serviceName, dsPurposeCode, tenantId, datasourceCode)));
+            this.clearCache(redisHelper);
         }
     }
 
@@ -137,18 +114,11 @@ public class Datasource extends AuditDomain {
      * 根据数据源id清空缓存
      *
      * @param redisHelper                 RedisHelper
-     * @param datasourceServiceRepository DatasourceServiceRepository
-     * @param datasourceId                数据源id
      */
-    public void clearCacheAllByDatasourceId(RedisHelper redisHelper,
-                                            DatasourceServiceRepository datasourceServiceRepository, Long datasourceId) {
-        if (Constants.Datasource.DATA_SOURCE_PURPOSE_DT.equals(dsPurposeCode)) {
-            List<DatasourceService> databaseServices =
-                    datasourceServiceRepository.select(DatasourceService.FIELD_DATASOURCE_ID, datasourceId);
-            databaseServices.stream().map(DatasourceService::getServiceName)
-                    .forEach(serviceName -> redisHelper.delKey(Datasource.generateKey(serviceName, dsPurposeCode, tenantId, datasourceCode)));
-        } else {
-            redisHelper.delKey(Datasource.generateKey(null, dsPurposeCode, tenantId, datasourceCode));
+    public void clearCache(RedisHelper redisHelper) {
+        String[] split = StringUtils.split(dsPurposeCode, BaseConstants.Symbol.COMMA);
+        for (String purposeCode : split) {
+            redisHelper.delKey(Datasource.generateKey(purposeCode, tenantId, datasourceCode));
         }
     }
 
@@ -157,37 +127,30 @@ public class Datasource extends AuditDomain {
      *
      * @param datasource  数据源
      * @param redisHelper RedisHelper
-     * @param serviceName 服务名
+     * @param dsPurposeCode 数据源用途编码，FIX20200804 支持单数据源维护多用途，多用途使用','拆分，在这里传递该code便于处理缓存
      */
-    public static void pushRedis(Datasource datasource, RedisHelper redisHelper, String serviceName) {
+    public static void pushRedis(Datasource datasource, RedisHelper redisHelper, String dsPurposeCode) {
         DatasourceVO cacheEntity = new DatasourceVO();
         BeanUtils.copyProperties(datasource, cacheEntity);
+        cacheEntity.setDsPurposeCode(dsPurposeCode);
         if (datasource.getDatasourceId() == null) {
             // id不存在，即数据源不存在，将“error”写入用作防击穿
-            redisHelper.strSet(Datasource.generateKey(serviceName, datasource.getDsPurposeCode(), datasource.getTenantId(), datasource.getDatasourceCode()), "");
+            redisHelper.strSet(Datasource.generateKey(dsPurposeCode, datasource.getTenantId(), datasource.getDatasourceCode()), "");
         } else {
-            redisHelper.objectSet(Datasource.generateKey(serviceName, datasource.getDsPurposeCode(), datasource.getTenantId(), datasource.getDatasourceCode()), cacheEntity);
+            redisHelper.objectSet(Datasource.generateKey(dsPurposeCode, datasource.getTenantId(), datasource.getDatasourceCode()), cacheEntity);
         }
     }
 
     /**
      * 根据服务名称生成缓存key
      *
-     * @param serviceName   服务名
      * @param dsPurposeCode 数据源用途
      * @return key
      */
-    public static String generateKey(String serviceName, String dsPurposeCode, Long tenantId, String datasourceCode) {
+    public static String generateKey(String dsPurposeCode, Long tenantId, String datasourceCode) {
         long organizationId = tenantId == null ? 0 : tenantId;
-        // 数据分发，redis后面添加一个serviceName，否则不添加
-        if (Constants.Datasource.DATA_SOURCE_PURPOSE_DT.equals(dsPurposeCode)) {
-            return FndConstants.CacheKey.DATASOURCE_KEY + BaseConstants.Symbol.COLON + dsPurposeCode +
-                    BaseConstants.Symbol.COLON + organizationId + BaseConstants.Symbol.COLON + datasourceCode +
-                    BaseConstants.Symbol.COLON + serviceName;
-        } else {
-            return FndConstants.CacheKey.DATASOURCE_KEY + BaseConstants.Symbol.COLON + dsPurposeCode +
-                    BaseConstants.Symbol.COLON + organizationId + BaseConstants.Symbol.COLON + datasourceCode;
-        }
+        return FndConstants.CacheKey.DATASOURCE_KEY + BaseConstants.Symbol.COLON + dsPurposeCode +
+                BaseConstants.Symbol.COLON + organizationId + BaseConstants.Symbol.COLON + datasourceCode;
     }
 
     //
@@ -207,6 +170,7 @@ public class Datasource extends AuditDomain {
     @ApiModelProperty(value = "数据源名称")
     @Length(max = 600)
     @NotBlank
+    @MultiLanguageField
     private String description;
     @ApiModelProperty(value = "数据源URL地址")
     @Length(max = 600)
@@ -244,12 +208,11 @@ public class Datasource extends AuditDomain {
     @Length(max = 240)
     private String remark;
     @ApiModelProperty(value = "数据源用途，值集：HPFM.DATASOURCE_PURPOSE")
-    @Length(max = 30)
+    @Length(max = 120)
     @NotBlank
-    @LovValue(value = "HPFM.DATASOURCE_PURPOSE", meaningField = "dsPurposeCodeMeaning")
-    @Pattern(regexp = Regexs.CODE_UPPER)
     private String dsPurposeCode;
     @ApiModelProperty(value = "租户Id")
+    @MultiLanguageField
     private Long tenantId;
     @ApiModelProperty(value = "扩展字段")
     private String extConfig;

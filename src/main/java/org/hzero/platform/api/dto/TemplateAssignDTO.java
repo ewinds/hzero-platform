@@ -1,11 +1,7 @@
 package org.hzero.platform.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.hzero.platform.domain.entity.CommonTemplate;
-import org.hzero.platform.domain.entity.TemplateAssign;
 import org.hzero.starter.keyencrypt.core.Encrypt;
-
-import io.choerodon.mybatis.domain.AuditDomain;
 
 /**
  * 分配模板 DTO

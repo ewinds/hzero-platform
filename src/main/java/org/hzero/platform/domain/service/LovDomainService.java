@@ -1,9 +1,9 @@
 package org.hzero.platform.domain.service;
 
-import org.hzero.platform.domain.entity.Lov;
-
 import java.util.List;
 import java.util.Map;
+
+import org.hzero.platform.domain.entity.Lov;
 
 /**
  * 值集逻辑统一处理Service
@@ -19,8 +19,8 @@ public interface LovDomainService {
      * @param tenantId 租户ID
      * @return lov基本信息, 无权访问时返回null
      */
-    default Lov queryLovInfo(String lovCode, Long tenantId) {
-        return queryLovInfo(lovCode, tenantId, false);
+    default Lov queryLovInfo(String lovCode, Long tenantId, String lang) {
+        return queryLovInfo(lovCode, tenantId, lang, false);
     }
 
     /**
@@ -30,7 +30,7 @@ public interface LovDomainService {
      * @param tenantId 租户ID
      * @return lov基本信息, 无权访问时返回null
      */
-    Lov queryLovInfo(String lovCode, Long tenantId, boolean onlyPublic);
+    Lov queryLovInfo(String lovCode, Long tenantId, String lang, boolean onlyPublic);
 
     /**
      * 集成查询值集数据
@@ -65,8 +65,8 @@ public interface LovDomainService {
      * @param tenantId 租户ID
      * @return 查询结果, 如果无权访问返回null
      */
-    default String queryLovSql(String lovCode, Long tenantId) {
-        return queryLovSql(lovCode, tenantId, false);
+    default String queryLovSql(String lovCode, Long tenantId, String lang) {
+        return queryLovSql(lovCode, tenantId, lang, false);
     }
 
     /**
@@ -76,7 +76,7 @@ public interface LovDomainService {
      * @param tenantId 租户ID
      * @return 查询结果, 如果无权访问返回null
      */
-    String queryLovSql(String lovCode, Long tenantId, boolean onlyPublic);
+    String queryLovSql(String lovCode, Long tenantId, String lang, boolean onlyPublic);
 
     /**
      * 根据lovCode查询SQL
@@ -85,8 +85,8 @@ public interface LovDomainService {
      * @param tenantId 租户ID
      * @return 查询结果, 如果无权访问返回null
      */
-    default String queryLovTranslationSql(String lovCode, Long tenantId) {
-        return queryLovTranslationSql(lovCode, tenantId, false);
+    default String queryLovTranslationSql(String lovCode, Long tenantId, String lang) {
+        return queryLovTranslationSql(lovCode, tenantId, lang, false);
     }
 
     /**
@@ -96,7 +96,7 @@ public interface LovDomainService {
      * @param tenantId 租户ID
      * @return 查询结果, 如果无权访问返回null
      */
-    String queryLovTranslationSql(String lovCode, Long tenantId, boolean onlyPublic);
+    String queryLovTranslationSql(String lovCode, Long tenantId, String lang, boolean onlyPublic);
 
     /**
      * 插入Lov
@@ -123,4 +123,17 @@ public interface LovDomainService {
      * @param siteFlag 是否是平台级查询
      */
     void copyLov(Long tenantId, String lovCode, Long lovId, Integer siteFlag);
+
+    /**
+     * 删除值集
+     *
+     * @param lovHeader 删除的数据
+     * @return 删除结果
+     */
+    int deleteLovHeader(Lov lovHeader);
+
+    /**
+     * 系统工具-刷新lov缓存
+     */
+    void deleteLovCache();
 }

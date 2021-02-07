@@ -82,21 +82,20 @@ mybatis:
   mapperLocations: classpath*:/mapper/*.xml
   configuration:
     mapUnderscoreToCamelCase: true
-    key-generator: snowflake
 
 hzero:
   lov:
     # 是否开启SQL类型LOV
     sql:
       enabled: ${HZERO_LOV_SQL_ENABLED:true}
+      # 是否开启SQL值集 public api
+      public-api-enabled: ${HZERO_LOV_SQL_PUBLIC_API_ENABLED:false}
     # 是否开启LOV值翻译
     value:
       enabled: ${HZERO_LOV_VALUE_ENABLED:true}
   platform:
     # 是否启动初始化缓存
     init-cache: ${HZERO_PLATFORM_INIT_CACHE:true}
-    # 平台HTTP协议
-    http-protocol: ${HZERO_PLATFORM_HTTP_PROTOCOL:http}
     # 角色模板编码
     role-template-codes:
       - ${HZERO_SALES_TEMPLATE_CODE:role/organization/default/template/sales}

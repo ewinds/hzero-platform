@@ -1,43 +1,52 @@
 package org.hzero.platform.domain.service.impl;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
-import org.springframework.web.client.RestTemplate;
-
 import io.choerodon.core.domain.Page;
 import io.choerodon.core.exception.CommonException;
 import io.choerodon.core.oauth.CustomUserDetails;
 import io.choerodon.core.oauth.DetailsHelper;
 import io.choerodon.mybatis.helper.LanguageHelper;
-
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hzero.common.HZeroCacheKey;
 import org.hzero.common.HZeroConstant;
 import org.hzero.common.HZeroService;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.core.redis.RedisHelper;
 import org.hzero.mybatis.common.Criteria;
+import org.hzero.mybatis.domian.Condition;
+import org.hzero.mybatis.util.Sqls;
 import org.hzero.platform.api.dto.LovValueDTO;
 import org.hzero.platform.app.service.LovValueService;
-import org.hzero.platform.app.service.impl.LovServiceImpl;
 import org.hzero.platform.domain.entity.Lov;
 import org.hzero.platform.domain.entity.LovValue;
+import org.hzero.platform.domain.entity.LovViewHeader;
 import org.hzero.platform.domain.repository.LovRepository;
 import org.hzero.platform.domain.repository.LovValueRepository;
+import org.hzero.platform.domain.repository.LovViewHeaderRepository;
 import org.hzero.platform.domain.service.LovDomainService;
 import org.hzero.platform.infra.constant.FndConstants;
 import org.hzero.platform.infra.constant.HpfmMsgCodeConstants;
 import org.hzero.platform.infra.properties.PlatformProperties;
 import org.hzero.platform.infra.util.JsonUtils;
+import org.hzero.starter.keyencrypt.core.EncryptContext;
+import org.hzero.starter.keyencrypt.core.EncryptType;
+import org.hzero.starter.keyencrypt.core.IEncryptionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.ScanOptions;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 值集逻辑统一处理Service实现类
@@ -46,6 +55,10 @@ import org.hzero.platform.infra.util.JsonUtils;
  */
 @Component
 public class LovDomainServiceImpl implements LovDomainService {
+    private static final Set<EncryptType> SHOULD = new HashSet<>(Arrays.asList(EncryptType.ENCRYPT, EncryptType.TO_STRING));
+    private static final Set<String> AUTO_TO_STRING = new HashSet<>(Arrays.asList("tenantId", "organizationId"));
+    private static final String[] EMPTY = new String[0];
+    private static final int SCAN_COUNT = 1000;
 
     @Autowired
     private LovRepository lovRepository;
@@ -61,17 +74,23 @@ public class LovDomainServiceImpl implements LovDomainService {
     private PlatformProperties platformProperties;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private LovViewHeaderRepository viewHeaderRepository;
+    @Autowired
+    private IEncryptionService encryptionService;
 
-    private final Logger logger = LoggerFactory.getLogger(LovServiceImpl.class);
+    private final Logger logger = LoggerFactory.getLogger(LovDomainServiceImpl.class);
 
     @Override
-    public Lov queryLovInfo(String lovCode, Long tenantId, boolean onlyPublic) {
+    public Lov queryLovInfo(String lovCode, Long tenantId, String lang, boolean onlyPublic) {
         Lov bestMatch;
         List<Lov> cacheResults;
         if (tenantId == null) {
             tenantId = BaseConstants.DEFAULT_TENANT_ID;
         }
-        String lang = this.getCurrentLanguage();
+        if (StringUtils.isBlank(lang)) {
+            lang = this.getCurrentLanguage();
+        }
         // 先从缓存中查询
         cacheResults = this.lovRepository.queryLovFromCacheByTenant(lovCode, tenantId, lang);
         bestMatch = cacheResults.get(cacheResults.size() - 1);
@@ -109,11 +128,12 @@ public class LovDomainServiceImpl implements LovDomainService {
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public List<Map<String, Object>> queryLovData(String lovCode, Long tenantId, String tag, Integer page, Integer size, Map<String, String> params, boolean onlyPublic) {
+        params = decryptParam(params);
         if (StringUtils.isEmpty(lovCode)) {
             return Collections.emptyList();
         }
         // 获取值集信息
-        Lov lov = this.queryLovInfo(lovCode, tenantId, onlyPublic);
+        Lov lov = this.queryLovInfo(lovCode, tenantId, null, onlyPublic);
         if (lov == null) {
             return Collections.emptyList();
         }
@@ -127,7 +147,7 @@ public class LovDomainServiceImpl implements LovDomainService {
             if (CollectionUtils.isEmpty(lovValues)) {
                 return Collections.emptyList();
             }
-            return lovValues.stream().map(LovValueDTO::toMap).collect(Collectors.toList());
+            return encryptResult(lov, lovValues.stream().map(LovValueDTO::toMap).collect(Collectors.toList()));
         } else {
             // 非独立值集,读取url信息,利用RestTemplate进行查询
             if (params == null) {
@@ -140,8 +160,10 @@ public class LovDomainServiceImpl implements LovDomainService {
             // 处理分页
             this.processPageInfo(params, page, size, Objects.equals(lov.getMustPageFlag(), BaseConstants.Flag.YES));
             String trueUrl = lov.convertTrueUrl();
-            String json = this.restTemplate.getForObject(this.platformProperties.getFullHttpProtocol() + HZeroService.getRealName(HZeroService.Gateway.NAME) + this.preProcessUrlParam(trueUrl, params), String.class, params);
-
+            int index = trueUrl.substring(1).indexOf("/", 1) + 1;
+            String serverCode = trueUrl.substring(1, index);
+            String url = trueUrl.substring(index);
+            String json = this.restTemplate.getForObject(this.platformProperties.getFullHttpProtocol() + getServerName(serverCode) + this.preProcessUrlParam(url, params), String.class, params);
             if (StringUtils.isBlank(json)) {
                 return Collections.emptyList();
             }
@@ -160,19 +182,91 @@ public class LovDomainServiceImpl implements LovDomainService {
             } else {
                 resultMaps = JsonUtils.checkAndParseObject(jsonNode, this.objectMapper, Page.class);
             }
-            return this.processValueAndMeaning(resultMaps, lov);
+            return this.processValueAndMeaning(encryptResult(lov, resultMaps), lov);
         }
     }
 
+    private Map<String, String> decryptParam(Map<String, String> paramMap) {
+        if (EncryptContext.isEncrypt()) {
+            Map<String, String> decryptParam = null;
+            if (MapUtils.isNotEmpty(paramMap)) {
+                decryptParam = new HashMap<>(paramMap.size());
+                for (Map.Entry<String, String> paramEntry : paramMap.entrySet()) {
+                    String k = paramEntry.getKey();
+                    String v = paramEntry.getValue();
+                    if (encryptionService.isCipher(k)) {
+                        k = encryptionService.decrypt(k, "");
+                    }
+                    if (encryptionService.isCipher(v)) {
+                        v = encryptionService.decrypt(v, "");
+                    }
+                    decryptParam.put(k, v);
+                }
+            }
+            return decryptParam;
+        }
+        return paramMap;
+    }
+
+    private List<Map<String, Object>> encryptResult(Lov lov, List<Map<String, Object>> result) {
+        // (没有配置加密字段 并且 不包含自动转字符串字段) 或者 结果集为空 或者 当前不需要加密或者转字符串
+        if ((StringUtils.isBlank(lov.getEncryptField()) && !AUTO_TO_STRING.contains(lov.getValueField()))
+                || CollectionUtils.isEmpty(result)
+                || !SHOULD.contains(EncryptContext.encryptType())) {
+            return result;
+        }
+        String[] encryptFields = StringUtils.isBlank(lov.getEncryptField()) ? EMPTY : lov.getEncryptField().split(",");
+        result.forEach(item -> {
+            if (MapUtils.isNotEmpty(item)) {
+                for (String auto2String : AUTO_TO_STRING) {
+                    item.computeIfPresent(auto2String, (k, oldValue) -> String.valueOf(oldValue));
+                }
+                for (String encryptField : encryptFields) {
+                    if (encryptField == null) {
+                        continue;
+                    }
+                    encryptField = encryptField.trim();
+                    if (item.containsKey(encryptField)) {
+                        Object o = item.get(encryptField);
+                        if (o != null) {
+                            if (EncryptType.ENCRYPT.equals(EncryptContext.encryptType())) {
+                                item.put(encryptField, encryptionService.encrypt(String.valueOf(o), ""));
+                            } else if (EncryptType.TO_STRING.equals(EncryptContext.encryptType())) {
+                                item.put(encryptField, String.valueOf(o));
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        return result;
+    }
+
+    /**
+     * 获取服务全名
+     *
+     * @param serverCode 服务简码
+     * @return 服务全称
+     */
+    private String getServerName(String serverCode) {
+        this.redisHelper.setCurrentDatabase(HZeroService.Admin.REDIS_DB);
+        String serverName = redisHelper.hshGet(HZeroService.Admin.CODE + ":routes", serverCode);
+        this.redisHelper.clearCurrentDatabase();
+        if (serverName == null) {
+            throw new CommonException(BaseConstants.ErrorCode.ERROR);
+        }
+        return serverName;
+    }
+
     @Override
-    public String queryLovSql(String lovCode, Long tenantId, boolean onlyPublic) {
+    public String queryLovSql(String lovCode, Long tenantId, String lang, boolean onlyPublic) {
         if (StringUtils.isEmpty(lovCode)) {
             return null;
         }
         if (tenantId == null) {
             tenantId = BaseConstants.DEFAULT_TENANT_ID;
         }
-        Lov lov = this.queryLovInfo(lovCode, tenantId, onlyPublic);
+        Lov lov = this.queryLovInfo(lovCode, tenantId, lang, onlyPublic);
         if (lov == null || !Objects.equals(lov.getLovTypeCode(), FndConstants.LovTypeCode.SQL)) {
             return null;
         }
@@ -185,11 +279,11 @@ public class LovDomainServiceImpl implements LovDomainService {
     }
 
     @Override
-    public String queryLovTranslationSql(String lovCode, Long tenantId, boolean onlyPublic) {
+    public String queryLovTranslationSql(String lovCode, Long tenantId, String lang, boolean onlyPublic) {
         if (StringUtils.isEmpty(lovCode)) {
             return null;
         }
-        Lov lov = this.queryLovInfo(lovCode, tenantId == null ? BaseConstants.DEFAULT_TENANT_ID : tenantId, onlyPublic);
+        Lov lov = this.queryLovInfo(lovCode, tenantId == null ? BaseConstants.DEFAULT_TENANT_ID : tenantId, lang, onlyPublic);
         if (lov == null || Objects.equals(lov.getLovTypeCode(), FndConstants.LovTypeCode.INDEPENDENT)) {
             return null;
         }
@@ -248,6 +342,83 @@ public class LovDomainServiceImpl implements LovDomainService {
         dbLov.setTenantId(tenantId);
         dbLov.setLovId(null);
         this.copyDuplicateLovWithDifferentTenant(dbLov, lovId, tenantId);
+    }
+
+    @Override
+    public int deleteLovHeader(Lov lovHeader) {
+        Assert.notNull(lovHeader.getLovId(), BaseConstants.ErrorCode.ERROR);
+        Lov lov = lovRepository.selectByPrimaryKey(lovHeader.getLovId());
+        if (lov == null) {
+            throw new CommonException(BaseConstants.ErrorCode.DATA_NOT_EXISTS);
+        }
+        if (BaseConstants.Flag.YES.equals(lov.getEnabledFlag())) {
+            throw new CommonException(HpfmMsgCodeConstants.ERROR_ENABLED_LOV_NOT_DELETE);
+        }
+        // 校验值集是否关联值集视图
+        this.checkLovViewReference(lovHeader);
+        if (FndConstants.LovTypeCode.INDEPENDENT.equals(lov.getLovTypeCode())) {
+            // 判断当前值集是否存在子级引用，若有子级值集引用该值集则不允许删除
+            this.checkSubLovExists(lov);
+            // 独立值集，此时需删除该独立值集下面存在的值集值
+            LovValue lovValue = new LovValue();
+            lovValue.setLovId(lov.getLovId());
+            List<LovValue> lovValues = lovValueRepository.select(lovValue);
+            if (!org.springframework.util.CollectionUtils.isEmpty(lovValues)) {
+                lovValueRepository.batchDeleteLovValuesByPrimaryKey(lovValues);
+            }
+        }
+        int count = lovRepository.deleteByPrimaryKey(lov.getLovId());
+        // 处理缓存
+        LanguageHelper.languages().forEach(language ->
+                lovRepository.cleanCache(lov.getLovCode(), lov.getTenantId(), language.getCode())
+        );
+        return count;
+    }
+
+    @Override
+//    @Async("commonAsyncTaskExecutor")
+    public void deleteLovCache() {
+        redisHelper.setCurrentDatabase(HZeroService.Platform.REDIS_DB);
+        synchronized (this){
+            redisHelper.delKeys(getAllLovKeys());
+        }
+        redisHelper.clearCurrentDatabase();
+    }
+
+    private Collection<String> getAllLovKeys() {
+        Set<String> keys = scan(HZeroCacheKey.Lov.LOV_KEY + BaseConstants.Symbol.STAR, SCAN_COUNT);
+        return keys;
+    }
+
+    private Set<String> scan(String matchKey, Integer count) {
+        Set<String> keys = new HashSet<>();
+        try {
+            keys = redisHelper.getRedisTemplate().execute((RedisCallback<Set<String>>) connection -> {
+                Set<String> keysTmp = new HashSet<>();
+                Cursor<byte[]> cursor = connection.scan(new ScanOptions.ScanOptionsBuilder().match(matchKey).count(count).build());
+                while (cursor.hasNext()) {
+                    keysTmp.add(new String(cursor.next()));
+                }
+                return keysTmp;
+            });
+        } catch (Exception e) {
+            throw new CommonException("redis scan keys error");
+        }
+        return keys;
+    }
+
+    /**
+     * 判断是否存在值集视图引用，若引用则不允许删除
+     *
+     * @param lovHeader 校验数据
+     */
+    private void checkLovViewReference(Lov lovHeader) {
+        LovViewHeader viewHeader = new LovViewHeader();
+        viewHeader.setLovId(lovHeader.getLovId());
+        int count = viewHeaderRepository.selectCount(viewHeader);
+        if (count > 0) {
+            throw new CommonException(HpfmMsgCodeConstants.ERROR_LOV_REFERENCED_WITH_LOV_VIEW);
+        }
     }
 
 
@@ -412,5 +583,22 @@ public class LovDomainServiceImpl implements LovDomainService {
             }
         }
         return stringBuilder.toString();
+    }
+
+    /**
+     * 判断值集是否作为父级值集，若为父级值集则不允许删除
+     *
+     * @param lov 查询条件
+     */
+    private void checkSubLovExists(Lov lov) {
+        int count = lovRepository.selectCountByCondition(Condition.builder(Lov.class)
+                .andWhere(Sqls.custom()
+                        .andEqualTo(Lov.FIELD_PARENT_LOV_CODE, lov.getLovCode())
+                        .andEqualTo(Lov.FIELD_PARENT_TENANT_ID, lov.getTenantId())
+                )
+                .build());
+        if (count > 0) {
+            throw new CommonException(HpfmMsgCodeConstants.ERROR_PARENT_LOV_NOT_DELETE);
+        }
     }
 }

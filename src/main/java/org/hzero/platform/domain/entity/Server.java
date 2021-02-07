@@ -86,7 +86,6 @@ public class Server extends AuditDomain {
     private String loginUser;
     @ApiModelProperty(value = "加密密码")
     @NotBlank
-    @DataSecurity
     @Length(max = 240)
     private String loginEncPwd;
     @ApiModelProperty(value = "是否启用 1:启用 0：不启用")

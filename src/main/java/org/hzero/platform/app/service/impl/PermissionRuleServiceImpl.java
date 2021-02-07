@@ -1,5 +1,10 @@
 package org.hzero.platform.app.service.impl;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import org.hzero.core.base.BaseConstants;
 import org.hzero.core.util.Pair;
 import org.hzero.platform.app.service.PermissionRuleService;
@@ -13,11 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * 屏蔽规则应用服务默认实现
@@ -67,7 +67,8 @@ public class PermissionRuleServiceImpl implements PermissionRuleService {
                 permissionRuleRepository.updatePermissionRule(existsRule
                         .setDescription(permission.getSecond().getDescription())
                         .setSqlValue(permission.getSecond().getSqlValue())
-                        .setEnabledFlag(permission.getSecond().getEnabledFlag()));
+                        .setEnabledFlag(permission.getSecond().getEnabledFlag())
+                        .setEditableFlag(permission.getFirst().getEditableFlag()));
                 permission.getSecond().setRuleId(existsRule.getRuleId());
             } else {
                 permissionRuleRepository.insertSelective(permission.getSecond());

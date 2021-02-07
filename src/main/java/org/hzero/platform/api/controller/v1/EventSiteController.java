@@ -1,9 +1,13 @@
 package org.hzero.platform.api.controller.v1;
 
-import java.util.List;
-
-import javax.servlet.http.HttpServletResponse;
-
+import io.choerodon.core.domain.Page;
+import io.choerodon.core.iam.ResourceLevel;
+import io.choerodon.mybatis.pagehelper.domain.PageRequest;
+import io.choerodon.swagger.annotation.Permission;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.core.base.BaseController;
 import org.hzero.core.util.Results;
@@ -23,18 +27,10 @@ import org.hzero.starter.keyencrypt.core.Encrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import springfox.documentation.annotations.ApiIgnore;
 
-import io.choerodon.core.domain.Page;
-import io.choerodon.core.iam.ResourceLevel;
-import io.choerodon.mybatis.pagehelper.domain.PageRequest;
-import io.choerodon.swagger.annotation.Permission;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
+import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  * 事件管理 API
@@ -59,7 +55,7 @@ public class EventSiteController extends BaseController {
     @Permission(level = ResourceLevel.SITE)
     @GetMapping
     public ResponseEntity<Page<EventDTO>> list(String eventCode, String eventDescription, Long tenantId,
-                                     @ApiIgnore PageRequest pageRequest) {
+                                               @ApiIgnore PageRequest pageRequest) {
         EventDTO eventDTO = new EventDTO();
         eventDTO.setEventCode(eventCode);
         eventDTO.setEventDescription(eventDescription);
@@ -100,7 +96,7 @@ public class EventSiteController extends BaseController {
     @ApiOperation(value = "批量删除事件")
     @Permission(level = ResourceLevel.SITE)
     @DeleteMapping
-    public ResponseEntity batchRemove(@RequestBody @Encrypt List<Event> events) {
+    public ResponseEntity<Void> batchRemove(@RequestBody @Encrypt List<Event> events) {
         SecurityTokenHelper.validToken(events, false);
         eventService.batchRemove(events);
         return Results.success();
@@ -141,21 +137,30 @@ public class EventSiteController extends BaseController {
     @ApiOperation(value = "批量删除事件规则")
     @Permission(level = ResourceLevel.SITE)
     @DeleteMapping("/{eventId}/rules")
-    public ResponseEntity batchRemoveEventRule(@PathVariable @Encrypt Long eventId, @RequestBody @Encrypt List<EventRule> eventRules) {
+    public ResponseEntity<Void> batchRemoveEventRule(@PathVariable @Encrypt Long eventId, @RequestBody @Encrypt List<EventRule> eventRules) {
         SecurityTokenHelper.validToken(eventRules);
         eventService.batchRemoveEventRule(eventId, eventRules);
         return Results.success();
+    }
+
+    @ApiOperation(value = "批量操作事件规则(新建/更新/删除)")
+    @Permission(level = ResourceLevel.SITE)
+    @PostMapping("/{eventId}/rules/batch")
+    public ResponseEntity<List<EventRuleDTO>> batch(@PathVariable @Encrypt Long eventId,
+                                                    @RequestBody @Encrypt List<EventRule> eventRules) {
+        SecurityTokenHelper.validTokenIgnoreInsert(eventRules);
+        this.validList(eventRules);
+        return Results.success(this.eventService.batch(eventId, eventRules));
     }
 
     @ApiOperation(value = "导出事件规则")
     @Permission(level = ResourceLevel.SITE)
     @GetMapping("/export")
     @ExcelExport(EventDTO.class)
-    public ResponseEntity export(@Encrypt EventDTO event, ExportParam exportParam, HttpServletResponse response,
-                                 PageRequest pageRequest) {
+    public ResponseEntity<List<EventDTO>> export(@Encrypt EventDTO event, ExportParam exportParam, HttpServletResponse response,
+                                                 PageRequest pageRequest) {
         event.setSiteQueryFlag(BaseConstants.Flag.YES);
         List<EventDTO> list = eventRepository.export(event, exportParam, pageRequest);
         return Results.success(list);
     }
-
 }

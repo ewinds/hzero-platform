@@ -187,4 +187,13 @@ public class LovManageController extends BaseController {
         return Results.success();
     }
 
+    @ApiOperation("删除值集头")
+    @Permission(level = ResourceLevel.ORGANIZATION)
+    @DeleteMapping("/lov-headers/delete")
+    public ResponseEntity deleteLovHeaderByPrimaryKey(@RequestBody @Encrypt Lov lovHeader) {
+        SecurityTokenHelper.validToken(lovHeader);
+        lovService.deleteLovHeaderByPrimaryKey(lovHeader);
+        return Results.success();
+    }
+
 }

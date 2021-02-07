@@ -186,12 +186,13 @@
         JOIN hpfm_region_tl hrt ON hrt.region_id = hr.region_id
         LEFT JOIN (
             SELECT
+            hr1.country_id,
             hr1.parent_region_id
             FROM
             hpfm_region hr1
             WHERE hr1.tenant_id = #{tenantId}
             GROUP BY
-            hr1.parent_region_id
+            hr1.country_id, hr1.parent_region_id
         ) sr ON sr.parent_region_id = hr.region_id
         WHERE
         hr.country_id = #{countryId}

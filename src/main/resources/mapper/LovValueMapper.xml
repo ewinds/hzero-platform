@@ -81,8 +81,7 @@
         delete from
             hpfm_lov_value
         where
-            1 = 1
-        and lov_id = #{lovId,jdbcType=DECIMAL}
+        lov_id = #{lovId,jdbcType=DECIMAL}
     </delete>
     
     <select id="selectLovValueByLovId" parameterType="java.lang.Long" resultMap="BaseResultMap">

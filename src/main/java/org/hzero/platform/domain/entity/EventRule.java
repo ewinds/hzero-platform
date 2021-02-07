@@ -1,17 +1,10 @@
 package org.hzero.platform.domain.entity;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.choerodon.core.exception.CommonException;
 import io.choerodon.mybatis.annotation.ModifyAudit;
 import io.choerodon.mybatis.annotation.VersionAudit;
 import io.choerodon.mybatis.domain.AuditDomain;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
@@ -20,6 +13,12 @@ import org.hzero.core.util.Regexs;
 import org.hzero.platform.infra.constant.FndConstants;
 import org.hzero.starter.keyencrypt.core.Encrypt;
 import org.springframework.http.HttpMethod;
+
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 
 /**
  * 事件规则
@@ -32,52 +31,10 @@ import org.springframework.http.HttpMethod;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EventRule extends AuditDomain {
 
-
-
-    public interface Insert{}
-
     /**
-     * 校验事件规则
-     *
-     * @throws CommonException 数据校验不通过
+     * 消息模板编码，表hmsg_message_template.template_code
      */
-    public void validate() {
-        // 同步标识为 1/0 必填
-        if (!BaseConstants.Flag.YES.equals(syncFlag) && !BaseConstants.Flag.NO.equals(syncFlag)) {
-            throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
-        }
-        // 调用类型为 M/A
-        if (!StringUtils.equalsAny(callType, FndConstants.CallType.METHOD, FndConstants.CallType.API)) {
-            throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
-        }
-        // 如果调用类型为M beanName和methodName不能为空
-        if (FndConstants.CallType.METHOD.equals(callType)) {
-            if (StringUtils.isBlank(beanName)) {
-                throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
-            }
-            if (StringUtils.isBlank(methodName)) {
-                throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
-            }
-        }
-        // 如果调用类型为API，apiUrl和apiMethod不能为空 apiMethod只能为GET/POST/PUT/DELETE
-        else if (FndConstants.CallType.API.equals(callType)) {
-            if (StringUtils.isBlank(apiUrl)) {
-                throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
-            }
-            if (StringUtils.isBlank(apiMethod)) {
-                throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
-            }
-            apiMethod = StringUtils.upperCase(apiMethod);
-            if (!StringUtils.equalsAny(apiMethod, HttpMethod.GET.name(), HttpMethod.POST.name(), HttpMethod.PUT.name(),
-                            HttpMethod.DELETE.name())) {
-                throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
-            }
-        }
-        // 规则不能为空
-        if (StringUtils.isBlank(matchingRule)) {
-            throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
-        }
-    }
+    private String messageCode;
 
     //
     // getter/setter
@@ -92,6 +49,10 @@ public class EventRule extends AuditDomain {
     @Range(max = 1)
     private Integer syncFlag;
     private String callType;
+    /**
+     * WebHook服务编码，表hmsg_webhook_server.server_code
+     */
+    private String serverCode;
     @Pattern(regexp = Regexs.CODE)
     @Length(max = 240)
     private String beanName;
@@ -102,6 +63,71 @@ public class EventRule extends AuditDomain {
     private String apiUrl;
     @Length(max = 240)
     private String apiMethod;
+
+    /**
+     * 校验事件规则
+     *
+     * @throws CommonException 数据校验不通过
+     */
+    public void validate() {
+        // 同步标识为 1/0 必填
+        if (!BaseConstants.Flag.YES.equals(syncFlag) && !BaseConstants.Flag.NO.equals(syncFlag)) {
+            throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
+        }
+        switch (this.callType) {
+            // 如果调用类型为M beanName和methodName不能为空
+            case FndConstants.CallType.METHOD:
+                if (StringUtils.isBlank(beanName)) {
+                    throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
+                }
+                if (StringUtils.isBlank(methodName)) {
+                    throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
+                }
+                break;
+            // 如果调用类型为API，apiUrl和apiMethod不能为空 apiMethod只能为GET/POST/PUT/DELETE
+            case FndConstants.CallType.API:
+                if (StringUtils.isBlank(apiUrl)) {
+                    throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
+                }
+                if (StringUtils.isBlank(apiMethod)) {
+                    throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
+                }
+                apiMethod = StringUtils.upperCase(apiMethod);
+                if (!StringUtils.equalsAny(apiMethod, HttpMethod.GET.name(), HttpMethod.POST.name(), HttpMethod.PUT.name(),
+                        HttpMethod.DELETE.name())) {
+                    throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
+                }
+                break;
+            // 如果调用类型未WEB_HOOK，messageCode和serverCode不能为空
+            case FndConstants.CallType.WEB_HOOK:
+                if (StringUtils.isBlank(this.messageCode)) {
+                    throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
+                }
+                if (StringUtils.isBlank(this.serverCode)) {
+                    throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
+                }
+                break;
+            default:
+                throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
+        }
+
+        // 规则不能为空
+        if (StringUtils.isBlank(matchingRule)) {
+            throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
+        }
+    }
+
+    /**
+     * @return 是否同步<br />
+     * <ul>
+     * <li>1 - 同步</li>
+     * <li>0 - 异步</li>
+     * </ul>
+     */
+    public Integer getSyncFlag() {
+        return syncFlag;
+    }
+
     private Integer orderSeq;
     @Length(max = 500)
     private String matchingRule;
@@ -152,33 +178,26 @@ public class EventRule extends AuditDomain {
     }
 
     /**
-     * @return 是否同步<br/>
-     *         <ul>
-     *         <li>1 - 同步</li>
-     *         <li>0 - 异步</li>
-     *         </ul>
+     * @return 调用类型<br />
+     * <ul>
+     * <li>M - 方法调用</li>
+     * <li>A - API调用</li>
+     * </ul>
      */
-    public Integer getSyncFlag() {
-        return syncFlag;
+    public String getCallType() {
+        return callType;
     }
 
     public void setSyncFlag(Integer syncFlag) {
         this.syncFlag = syncFlag;
     }
 
-    /**
-     * @return 调用类型<br/>
-     *         <ul>
-     *         <li>M - 方法调用</li>
-     *         <li>A - API调用</li>
-     *         </ul>
-     */
-    public String getCallType() {
-        return callType;
-    }
-
     public void setCallType(String callType) {
         this.callType = callType;
+    }
+
+    public String getMessageCode() {
+        return messageCode;
     }
 
     /**
@@ -225,6 +244,36 @@ public class EventRule extends AuditDomain {
         this.apiMethod = apiMethod;
     }
 
+    public void setMessageCode(String messageCode) {
+        this.messageCode = messageCode;
+    }
+
+    public String getServerCode() {
+        return serverCode;
+    }
+
+    public void setServerCode(String serverCode) {
+        this.serverCode = serverCode;
+    }
+
+    /**
+     * @return 事件规则，OGNL表达式 not null<br/>
+     * Examples:
+     * <ul>
+     * <li>el or e2</li>
+     * <li>el and e2</li>
+     * <li>el <= e2</li>
+     * <li>el == e2</li>
+     * <li>el != e2</li>
+     * <li>e.method(args)：调用对象方法</li>
+     * <li>e.property：对象属性值</li>
+     * <li>@class@method(args)：调用类的静态方法</li>
+     * </ul>
+     */
+    public String getMatchingRule() {
+        return matchingRule;
+    }
+
     /**
      * @return 调用顺序
      */
@@ -237,21 +286,14 @@ public class EventRule extends AuditDomain {
     }
 
     /**
-     * @return 事件规则，OGNL表达式 not null<br/>
-     *         Examples:
-     *         <ul>
-     *         <li>el or e2</li>
-     *         <li>el and e2</li>
-     *         <li>el <= e2</li>
-     *         <li>el == e2</li>
-     *         <li>el != e2</li>
-     *         <li>e.method(args)：调用对象方法</li>
-     *         <li>e.property：对象属性值</li>
-     *         <li>@class@method(args)：调用类的静态方法</li>
-     *         </ul>
+     * @return enableFlag 是否启用
+     * <ul>
+     * <li>1 - 启用</li>
+     * <li>0 - 禁用</li>
+     * </ul>
      */
-    public String getMatchingRule() {
-        return matchingRule;
+    public Integer getEnabledFlag() {
+        return enabledFlag;
     }
 
     public void setMatchingRule(String matchingRule) {
@@ -269,15 +311,7 @@ public class EventRule extends AuditDomain {
         this.resultFlag = resultFlag;
     }
 
-    /**
-     * @return enableFlag 是否启用
-     *         <ul>
-     *         <li>1 - 启用</li>
-     *         <li>0 - 禁用</li>
-     *         </ul>
-     */
-    public Integer getEnabledFlag() {
-        return enabledFlag;
+    public interface Insert {
     }
 
     public void setEnabledFlag(Integer enabledFlag) {

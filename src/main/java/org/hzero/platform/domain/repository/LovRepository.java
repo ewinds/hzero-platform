@@ -1,12 +1,14 @@
 package org.hzero.platform.domain.repository;
 
-import io.choerodon.core.domain.Page;
-import io.choerodon.mybatis.pagehelper.domain.PageRequest;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.hzero.mybatis.base.BaseRepository;
+import org.hzero.platform.api.dto.LovAggregateDTO;
 import org.hzero.platform.domain.entity.Lov;
 
-import java.util.List;
+import io.choerodon.core.domain.Page;
+import io.choerodon.mybatis.pagehelper.domain.PageRequest;
 
 /**
  * <p><b>name</b> LovRepository</p>
@@ -140,4 +142,24 @@ public interface LovRepository extends BaseRepository<Lov> {
         }
         return tenantId + "-" + lang;
     }
+
+    /**
+     * 通过视图编码和租户Id获取关联的值集信息
+     *
+     * @param viewCode 视图编码
+     * @param tenantId 租户Id
+     * @return 关联值集信息
+     */
+    Lov selectLovByViewCodeAndTenant(String viewCode, Long tenantId);
+
+    /**
+     * 聚合获取值集头行数据
+     *
+     * @param lovCode   值集编码
+     * @param tenantId  租户Id
+     * @param lang      语言
+     * @param tag       标记，仅独立值集可作为查询条件
+     * @return 值集头行聚合结果
+     */
+    LovAggregateDTO selectLovAggregateLovValues(String lovCode, Long tenantId, String lang, String tag);
 }

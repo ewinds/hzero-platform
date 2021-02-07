@@ -1,16 +1,13 @@
 package org.hzero.platform.api.dto;
 
-import org.hzero.export.annotation.ExcelColumn;
-import org.hzero.export.annotation.ExcelSheet;
-import org.hzero.mybatis.domian.SecurityToken;
-import org.hzero.platform.domain.entity.Event;
-import org.hzero.platform.domain.entity.EventRule;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
-
 import io.choerodon.mybatis.domain.AuditDomain;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import org.hzero.export.annotation.ExcelColumn;
+import org.hzero.export.annotation.ExcelSheet;
+import org.hzero.mybatis.domian.SecurityToken;
+import org.hzero.platform.domain.entity.EventRule;
 import org.hzero.starter.keyencrypt.core.Encrypt;
 
 /**
@@ -33,22 +30,28 @@ public class EventRuleDTO extends AuditDomain {
     private Integer syncFlag;
     @ApiModelProperty("调用类型")
     private String callType;
-    @ExcelColumn(order = 7)
+    @ExcelColumn(order = 80)
     @ApiModelProperty("BeanName")
     private String beanName;
-    @ExcelColumn(order = 8)
+    @ExcelColumn(order = 90)
     @ApiModelProperty("MethodName")
     private String methodName;
-    @ExcelColumn(order = 9)
+    @ExcelColumn(order = 100)
     @ApiModelProperty("Api地址")
     private String apiUrl;
-    @ExcelColumn(order = 10)
+    @ExcelColumn(order = 110)
     @ApiModelProperty("Api方法")
     private String apiMethod;
-    @ExcelColumn(title = "调度顺序", order = 4)
+    @ExcelColumn(order = 120)
+    @ApiModelProperty("消息模板编码")
+    private String messageCode;
+    @ExcelColumn(order = 130)
+    @ApiModelProperty("WebHook服务编码")
+    private String serverCode;
+    @ExcelColumn(title = "调度顺序", order = 50)
     @ApiModelProperty("调度顺序")
     private Integer orderSeq;
-    @ExcelColumn(title = "匹配规则", order = 1)
+    @ExcelColumn(title = "匹配规则", order = 20)
     @ApiModelProperty("匹配规则")
     private String matchingRule;
     @ApiModelProperty("是否返回结果")
@@ -59,17 +62,17 @@ public class EventRuleDTO extends AuditDomain {
     private String ruleDescription;
     private Long objectVersionNumber;
 
-    @ExcelColumn(title = "是否同步", order = 3)
+    @ExcelColumn(title = "是否同步", order = 40)
     private String syncFlagMeaning;
-    @ExcelColumn(title = "调用类型", order = 2)
+    @ExcelColumn(title = "调用类型", order = 30)
     private String callTypeMeaning;
-    @ExcelColumn(title = "是否返回结果", order = 5)
+    @ExcelColumn(title = "是否返回结果", order = 60)
     private String resultMeaning;
-    @ExcelColumn(title = "是否启用", order = 6)
+    @ExcelColumn(title = "是否启用", order = 70)
     private String enabledMeaning;
 
     @Override
-    public Class<? extends SecurityToken> associateEntityClass(){
+    public Class<? extends SecurityToken> associateEntityClass() {
         return EventRule.class;
     }
 
@@ -137,6 +140,22 @@ public class EventRuleDTO extends AuditDomain {
         this.apiMethod = apiMethod;
     }
 
+    public String getMessageCode() {
+        return messageCode;
+    }
+
+    public void setMessageCode(String messageCode) {
+        this.messageCode = messageCode;
+    }
+
+    public String getServerCode() {
+        return serverCode;
+    }
+
+    public void setServerCode(String serverCode) {
+        this.serverCode = serverCode;
+    }
+
     public Integer getOrderSeq() {
         return orderSeq;
     }
@@ -177,10 +196,12 @@ public class EventRuleDTO extends AuditDomain {
         this.ruleDescription = ruleDescription;
     }
 
+    @Override
     public Long getObjectVersionNumber() {
         return objectVersionNumber;
     }
 
+    @Override
     public void setObjectVersionNumber(Long objectVersionNumber) {
         this.objectVersionNumber = objectVersionNumber;
     }
@@ -219,45 +240,27 @@ public class EventRuleDTO extends AuditDomain {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("EventRuleDTO [eventRuleId=");
-        builder.append(eventRuleId);
-        builder.append(", eventId=");
-        builder.append(eventId);
-        builder.append(", syncFlag=");
-        builder.append(syncFlag);
-        builder.append(", callType=");
-        builder.append(callType);
-        builder.append(", beanName=");
-        builder.append(beanName);
-        builder.append(", methodName=");
-        builder.append(methodName);
-        builder.append(", apiUrl=");
-        builder.append(apiUrl);
-        builder.append(", apiMethod=");
-        builder.append(apiMethod);
-        builder.append(", orderSeq=");
-        builder.append(orderSeq);
-        builder.append(", matchingRule=");
-        builder.append(matchingRule);
-        builder.append(", resultFlag=");
-        builder.append(resultFlag);
-        builder.append(", enabledFlag=");
-        builder.append(enabledFlag);
-        builder.append(", ruleDescription=");
-        builder.append(ruleDescription);
-        builder.append(", objectVersionNumber=");
-        builder.append(objectVersionNumber);
-        builder.append(", syncFlagMeaning=");
-        builder.append(syncFlagMeaning);
-        builder.append(", callTypeMeaning=");
-        builder.append(callTypeMeaning);
-        builder.append(", resultMeaning=");
-        builder.append(resultMeaning);
-        builder.append(", enabledMeaning=");
-        builder.append(enabledMeaning);
-        builder.append("]");
-        return builder.toString();
+        return "EventRuleDTO{" +
+                "eventRuleId=" + eventRuleId +
+                ", eventId=" + eventId +
+                ", syncFlag=" + syncFlag +
+                ", callType='" + callType + '\'' +
+                ", beanName='" + beanName + '\'' +
+                ", methodName='" + methodName + '\'' +
+                ", apiUrl='" + apiUrl + '\'' +
+                ", apiMethod='" + apiMethod + '\'' +
+                ", messageCode='" + messageCode + '\'' +
+                ", serverCode='" + serverCode + '\'' +
+                ", orderSeq=" + orderSeq +
+                ", matchingRule='" + matchingRule + '\'' +
+                ", resultFlag=" + resultFlag +
+                ", enabledFlag=" + enabledFlag +
+                ", ruleDescription='" + ruleDescription + '\'' +
+                ", objectVersionNumber=" + objectVersionNumber +
+                ", syncFlagMeaning='" + syncFlagMeaning + '\'' +
+                ", callTypeMeaning='" + callTypeMeaning + '\'' +
+                ", resultMeaning='" + resultMeaning + '\'' +
+                ", enabledMeaning='" + enabledMeaning + '\'' +
+                "} " + super.toString();
     }
-    
 }

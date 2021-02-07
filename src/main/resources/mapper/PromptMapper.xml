@@ -49,15 +49,16 @@
         </if>
         <if test="description != null">
         <bind name="descriptionLike" value="'%' + description + '%'"/>
-            AND EXISTS (
+            AND hp.prompt_id IN (
                 SELECT
-                  1
+                  hpe.prompt_id
                 FROM
                   hpfm_prompt hpe
+                JOIN hpfm_prompt hpet ON (hpet.prompt_key = hpe.prompt_key AND hpet.prompt_code = hpe.prompt_code)
                 WHERE
-                  hpe.description LIKE #{descriptionLike}
-                AND hpe.prompt_code = hp.prompt_code
-                AND hpe.prompt_key = hp.prompt_key
+                  hpet.description LIKE #{descriptionLike}
+                AND hpe.lang = #{language}
+                GROUP BY hpe.prompt_id
             )
         </if>
 
@@ -83,7 +84,18 @@
         AND fl.id = flt.id
         AND hp.lang = #{language}
         AND flt.lang = #{language}
-        AND hp.tenant_id = #{tenantId}
+        AND (hp.tenant_id = 0 <if test="tenantId != null and tenantId != 0">OR hp.tenant_id = #{tenantId}</if>)
+        <if test="tenantId != null and tenantId != 0">
+            AND hp.prompt_id NOT IN (
+            SELECT hpr.prompt_id
+            FROM hpfm_prompt hpr
+            JOIN hpfm_prompt hpr1 ON (hpr.prompt_key = hpr1.prompt_key
+                AND hpr.prompt_code = hpr1.prompt_code
+                AND hpr.lang = hpr1.lang
+                AND hpr1.tenant_id = #{tenantId})
+            WHERE hpr.tenant_id = 0
+            )
+        </if>
         <if test="promptKey != null">
             <bind name="keyLike" value="'%'+ promptKey + '%'"/>
             AND hp.prompt_key LIKE #{keyLike}
@@ -94,70 +106,18 @@
         </if>
         <if test="description != null">
             <bind name="descriptionLike" value="'%' + description + '%'"/>
-            AND EXISTS (
+            AND hp.prompt_id IN (
                 SELECT
-                  1
+                  hpe.prompt_id
                 FROM
                   hpfm_prompt hpe
+                JOIN hpfm_prompt hpet ON (hpet.prompt_key = hpe.prompt_key AND hpet.prompt_code = hpe.prompt_code)
                 WHERE
-                  hpe.description LIKE #{descriptionLike}
-                AND hpe.prompt_code = hp.prompt_code
-                AND hpe.prompt_key = hp.prompt_key
+                  hpet.description LIKE #{descriptionLike}
+                AND hpe.lang = #{language}
+                GROUP BY hpe.prompt_id
             )
         </if>
-        UNION
-        SELECT
-            hp.prompt_id,
-            hp.tenant_id,
-            hp.prompt_code,
-            hp.prompt_key,
-            hp.description,
-            hp.object_version_number,
-            hp.lang,
-            flt.description lang_description
-        FROM
-            hpfm_prompt hp,
-            fd_language fl,
-            fd_language_tl flt
-        WHERE
-            hp.lang = fl.CODE
-        AND fl.id = flt.id
-        AND hp.lang = #{language}
-        AND flt.lang = #{language}
-        AND hp.tenant_id = 0
-        <if test="promptKey != null">
-            <bind name="keyLike" value="'%'+ promptKey + '%'"/>
-            AND hp.prompt_key LIKE #{keyLike}
-        </if>
-        <if test="promptCode != null">
-            <bind name="codeLike" value="'%'+ promptCode + '%'"/>
-            AND hp.prompt_code LIKE #{codeLike}
-        </if>
-        <if test="description != null">
-            <bind name="descriptionLike" value="'%' + description + '%'"/>
-            AND EXISTS (
-                SELECT
-                  1
-                FROM
-                  hpfm_prompt hpe
-                WHERE
-                  hpe.description LIKE #{descriptionLike}
-                AND hpe.prompt_code = hp.prompt_code
-                AND hpe.prompt_key = hp.prompt_key
-            )
-            AND hp.description LIKE #{descriptionLike}
-        </if>
-        AND NOT EXISTS (
-            SELECT
-              1
-            FROM
-              hpfm_prompt hpr
-            WHERE
-              hpr.prompt_key = hp.prompt_key
-            AND hpr.prompt_code = hp.prompt_code
-            AND hpr.lang = hp.lang
-            AND hpr.tenant_id = #{tenantId}
-        )
     </select>
     
     <select id="selectOnePrompt" resultType="org.hzero.platform.domain.entity.Prompt">

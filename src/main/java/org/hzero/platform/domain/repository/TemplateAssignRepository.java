@@ -4,7 +4,6 @@ import io.choerodon.core.domain.Page;
 import io.choerodon.mybatis.pagehelper.domain.PageRequest;
 import org.hzero.mybatis.base.BaseRepository;
 import org.hzero.platform.api.dto.TemplateAssignDTO;
-import org.hzero.platform.domain.entity.CommonTemplate;
 import org.hzero.platform.domain.entity.TemplateAssign;
 
 import java.util.List;

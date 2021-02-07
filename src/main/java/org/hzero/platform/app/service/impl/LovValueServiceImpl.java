@@ -1,10 +1,9 @@
 package org.hzero.platform.app.service.impl;
 
-import io.choerodon.core.domain.Page;
-import io.choerodon.core.oauth.CustomUserDetails;
-import io.choerodon.core.oauth.DetailsHelper;
-import io.choerodon.mybatis.helper.LanguageHelper;
-import io.choerodon.mybatis.pagehelper.domain.PageRequest;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -28,9 +27,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
+import io.choerodon.core.domain.Page;
+import io.choerodon.core.oauth.CustomUserDetails;
+import io.choerodon.core.oauth.DetailsHelper;
+import io.choerodon.mybatis.helper.LanguageHelper;
+import io.choerodon.mybatis.pagehelper.domain.PageRequest;
 
 /**
  * 值集值App服务实现类
@@ -75,7 +76,7 @@ public class LovValueServiceImpl implements LovValueService {
         if (StringUtils.isBlank(lang)) {
             lang = this.getCurrentLanguage();
         }
-        lov = lov == null ? this.lovService.queryLovInfo(lovCode, tenantId) : lov;
+        lov = lov == null ? this.lovService.queryLovInfo(lovCode, tenantId, lang) : lov;
         if (lov == null || !Objects.equals(lov.getLovTypeCode(), FndConstants.LovTypeCode.INDEPENDENT)) {
             return Collections.emptyList();
         }
@@ -115,7 +116,7 @@ public class LovValueServiceImpl implements LovValueService {
         if (lovValue.getTenantId() == null) {
             lovValue.setTenantId(BaseConstants.DEFAULT_TENANT_ID);
         }
-        Lov vo = this.lovService.queryLovInfo(lovValue.getLovCode(), lovValue.getTenantId());
+        Lov vo = this.lovService.queryLovInfo(lovValue.getLovCode(), lovValue.getTenantId(), null);
         if (vo == null || !Objects.equals(vo.getLovTypeCode(), FndConstants.LovTypeCode.INDEPENDENT)) {
             return new Page<>();
         }
@@ -154,7 +155,7 @@ public class LovValueServiceImpl implements LovValueService {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Map<String, List<LovValueDTO>> batchQueryLovValue(Map<String, String> queryMap, Long tenantId) {
+    public Map<String, List<LovValueDTO>> batchQueryLovValue(Map<String, String> queryMap, Long tenantId, String lang) {
         if (queryMap == null) {
             return MapUtils.EMPTY_SORTED_MAP;
         }
@@ -163,7 +164,7 @@ public class LovValueServiceImpl implements LovValueService {
         }
         Map<String, List<LovValueDTO>> result = new HashMap<>(queryMap.size());
         Long finalTenantId = tenantId;
-        queryMap.forEach((key, value) -> result.put(key, this.queryLovValue(value, finalTenantId, null)));
+        queryMap.forEach((key, value) -> result.put(key, this.queryLovValue(value, finalTenantId, null, lang)));
         return result;
     }
 

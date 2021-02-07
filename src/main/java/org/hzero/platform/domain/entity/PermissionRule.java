@@ -10,6 +10,8 @@ import javax.validation.constraints.Pattern;
 import io.choerodon.core.exception.CommonException;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.choerodon.mybatis.annotation.MultiLanguage;
+import io.choerodon.mybatis.annotation.MultiLanguageField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotBlank;
@@ -37,6 +39,7 @@ import java.util.Objects;
 @ApiModel("屏蔽规则")
 @VersionAudit
 @ModifyAudit
+@MultiLanguage
 @Table(name = "hpfm_permission_rule")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PermissionRule extends AuditDomain {
@@ -98,6 +101,7 @@ public class PermissionRule extends AuditDomain {
     @Length(max = 30)
     private String ruleCode;
     @NotBlank
+    @MultiLanguageField
     @ApiModelProperty("规则名称")
     @Length(max = 120)
     private String ruleName;
@@ -108,6 +112,7 @@ public class PermissionRule extends AuditDomain {
     private String sqlValue;
     @NotNull
     @ApiModelProperty("租户ID")
+    @MultiLanguageField
     private Long tenantId;
     @NotNull
     @ApiModelProperty("启用标识")

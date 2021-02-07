@@ -39,11 +39,4 @@ public interface DatasourceMapper extends BaseMapper<Datasource> {
      * @return Datasource
      */
     Datasource getByUnique(@Param("tenantId") Long tenantId, @Param("datasourceCode") String datasourceCode);
-
-    /**
-     * 根据数据源id删除数据源，以及数据源服务关系
-     *
-     * @param datasourceId 数据源id
-     */
-    void deleteByDatasourceId(@Param("datasourceId") Long datasourceId);
 }

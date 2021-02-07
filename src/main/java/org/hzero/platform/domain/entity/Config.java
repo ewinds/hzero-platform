@@ -1,31 +1,40 @@
 package org.hzero.platform.domain.entity;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 
-import java.util.Date;
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import io.choerodon.mybatis.annotation.ModifyAudit;
-import io.choerodon.mybatis.annotation.VersionAudit;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import org.apache.commons.collections4.CollectionUtils;
-import io.choerodon.mybatis.domain.AuditDomain;
+import org.apache.commons.collections4.MapUtils;
 import org.hibernate.validator.constraints.Length;
-import javax.validation.constraints.NotBlank;
 import org.hzero.common.HZeroConstant;
 import org.hzero.core.redis.RedisHelper;
 import org.hzero.core.util.FileUtils;
 import org.hzero.core.util.Regexs;
+import org.hzero.platform.domain.vo.TitleConfigCacheVO;
 import org.hzero.platform.infra.constant.Constants;
 import org.hzero.platform.infra.constant.FndConstants;
 import org.hzero.starter.keyencrypt.core.Encrypt;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import io.choerodon.mybatis.annotation.ModifyAudit;
+import io.choerodon.mybatis.annotation.MultiLanguage;
+import io.choerodon.mybatis.annotation.MultiLanguageField;
+import io.choerodon.mybatis.annotation.VersionAudit;
+import io.choerodon.mybatis.domain.AuditDomain;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * <p>
@@ -39,10 +48,14 @@ import org.hzero.starter.keyencrypt.core.Encrypt;
 @Table(name = "hpfm_config")
 @ApiModel("系统配置")
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@MultiLanguage
 public class Config extends AuditDomain {
 
     public static final String FIELD_TENANT_ID = "tenantId";
     public static final String FIELD_CONFIG_VALUE = "configValue";
+    /*用于处理系统配置标题多语言内容*/
+    public static final String FIELD_DB_CONFIG_VALUE = "config_value";
+    public static final String FIELD_DB_LANG= "lang";
 
 
     /**
@@ -52,7 +65,23 @@ public class Config extends AuditDomain {
      */
     public void refreshCache(RedisHelper redisHelper){
         String key = Config.generateCacheKey(configCode, tenantId);
-        redisHelper.strSet(key, configValue);
+        if (Constants.CONFIG_CODE_TITLE.equals(configCode)) {
+            Map<String, String> resultMap = new HashMap<>(languageValue.size());
+            languageValue.forEach(map ->{
+                String lang = map.getLang();
+                String dbConfigValue = map.getConfigValue();
+                resultMap.put(lang, dbConfigValue);
+            });
+            // 系统标题类型，需缓存多语言内容
+            if (MapUtils.isNotEmpty(resultMap)) {
+                String cacheValue = redisHelper.toJson(resultMap);
+                // 缓存标题
+                redisHelper.strSet(key, cacheValue);
+            }
+        } else {
+            // 其它类型自行缓存即可
+            redisHelper.strSet(key, configValue);
+        }
     }
 
     /**
@@ -95,8 +124,10 @@ public class Config extends AuditDomain {
     private String configCode;
     @ApiModelProperty("系统配置值")
     @Length(max = 240)
+    @MultiLanguageField
     private String configValue;
     @ApiModelProperty("租户ID")
+    @MultiLanguageField
     private Long tenantId;
     @ApiModelProperty("分类")
     @Length(max = 30)
@@ -105,6 +136,17 @@ public class Config extends AuditDomain {
     private Long objectVersionNumber;
     @Transient
     private String fileName;
+    @Transient
+    @JsonIgnore
+    private List<TitleConfigCacheVO> languageValue;
+
+    public List<TitleConfigCacheVO> getLanguageValue() {
+        return languageValue;
+    }
+
+    public void setLanguageValue(List<TitleConfigCacheVO> languageValue) {
+        this.languageValue = languageValue;
+    }
 
     /**
      * @return 主键id

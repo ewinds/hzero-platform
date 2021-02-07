@@ -12,8 +12,8 @@ import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.hibernate.validator.constraints.Length;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.core.redis.RedisHelper;
@@ -25,11 +25,14 @@ import org.hzero.starter.keyencrypt.core.Encrypt;
 import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.choerodon.core.exception.CommonException;
 import io.choerodon.mybatis.annotation.ModifyAudit;
 import io.choerodon.mybatis.annotation.VersionAudit;
 import io.choerodon.mybatis.domain.AuditDomain;
+import io.choerodon.mybatis.helper.LanguageHelper;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -75,6 +78,10 @@ public class Prompt extends AuditDomain {
         if (promptKey == null || promptCode == null || promptKey.length() > 60 || promptCode.length() > 240) {
             // 参数校验失败
             throw new CommonException(HpfmMsgCodeConstants.ERROR_PROMPT_PARAM_NOT_NULL, promptKey, promptCode);
+        }
+        if (MapUtils.isEmpty(promptConfigs) || !promptConfigs.containsKey(LanguageHelper.getDefaultLanguage())) {
+            // 数据校验不合法
+            throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
         }
         promptConfigs.forEach((key, value) -> {
             if (key.length() > 30 || value.length() > 750) {

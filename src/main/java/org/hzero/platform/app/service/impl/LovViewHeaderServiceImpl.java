@@ -2,6 +2,9 @@ package org.hzero.platform.app.service.impl;
 
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+import org.hzero.core.base.BaseConstants;
+import org.hzero.platform.api.dto.LovViewAggregateDTO;
 import org.hzero.platform.app.service.LovViewHeaderService;
 import org.hzero.platform.domain.entity.LovViewHeader;
 import org.hzero.platform.domain.repository.LovViewHeaderRepository;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import io.choerodon.core.domain.Page;
+import io.choerodon.mybatis.helper.LanguageHelper;
 import io.choerodon.mybatis.pagehelper.PageHelper;
 import io.choerodon.mybatis.pagehelper.domain.PageRequest;
 
@@ -29,8 +33,8 @@ public class LovViewHeaderServiceImpl implements LovViewHeaderService {
     private LovViewDomainService lovViewDomainService;
     
     @Override
-    public LovViewVO queryLovViewInfo(String viewCode, Long tenantId) {
-        return lovViewDomainService.queryLovViewInfo(viewCode, tenantId);
+    public LovViewVO queryLovViewInfo(String viewCode, Long tenantId, String lang, boolean onlyPublic) {
+        return lovViewDomainService.queryLovViewInfo(viewCode, tenantId, lang, onlyPublic);
     }
     
     @Override
@@ -58,6 +62,23 @@ public class LovViewHeaderServiceImpl implements LovViewHeaderService {
     @Override
     public void copyLovView(Long tenantId, String viewCode, Long viewHeaderId, Integer siteFlag) {
         lovViewDomainService.copyLovView(tenantId, viewCode, viewHeaderId, siteFlag);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteLovViewHeader(LovViewHeader lovViewHeader) {
+        lovViewDomainService.deleteLovViewHeader(lovViewHeader);
+    }
+
+    @Override
+    public LovViewAggregateDTO queryLovViewAggregate(String viewCode, Long tenantId, String lang) {
+        if (tenantId == null) {
+            tenantId = BaseConstants.DEFAULT_TENANT_ID;
+        }
+        if (StringUtils.isBlank(lang)) {
+            lang = LanguageHelper.language();
+        }
+        return lovViewHeaderRepository.selectLovViewAggregate(viewCode, tenantId, lang);
     }
 
 }

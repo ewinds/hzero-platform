@@ -11,6 +11,8 @@
         <result property="methodName" column="method_name"/>
         <result property="apiUrl" column="api_url"/>
         <result property="apiMethod" column="api_method"/>
+        <result property="messageCode" column="message_code"/>
+        <result property="serverCode" column="server_code"/>
         <result property="orderSeq" column="order_seq"/>
         <result property="matchingRule" column="matching_rule"/>
         <result property="resultFlag" column="result_flag"/>
@@ -26,24 +28,26 @@
 
     <select id="selectEventRule" parameterType="org.hzero.platform.api.dto.EventRuleDTO" resultMap="BaseResultMap">
         select
-          hfer.event_rule_id,
-          hfer.event_id,
-          hfer.sync_flag,
-          hfer.call_type,
-          hfer.bean_name,
-          hfer.method_name,
-          hfer.api_url,
-          hfer.api_method,
-          hfer.order_seq,
-          hfer.matching_rule,
-          hfer.result_flag,
-          hfer.enabled_flag,
-          hfer.rule_description,
-          hfer.object_version_number,
-          hflv1.meaning as call_type_meaning,
-          hflv2.meaning as sync_flag_meaning,
-          hflv3.meaning as result_meaning,
-          hflv4.meaning as enabled_meaning
+        hfer.event_rule_id,
+        hfer.event_id,
+        hfer.sync_flag,
+        hfer.call_type,
+        hfer.bean_name,
+        hfer.method_name,
+        hfer.api_url,
+        hfer.api_method,
+        hfer.message_code,
+        hfer.server_code,
+        hfer.order_seq,
+        hfer.matching_rule,
+        hfer.result_flag,
+        hfer.enabled_flag,
+        hfer.rule_description,
+        hfer.object_version_number,
+        hflv1.meaning as call_type_meaning,
+        hflv2.meaning as sync_flag_meaning,
+        hflv3.meaning as result_meaning,
+        hflv4.meaning as enabled_meaning
         from hpfm_event_rule hfer
         join hpfm_lov_value hflv1 on hflv1.lov_code = 'HPFM.EVENT.CALL_TYPE' and hflv1.value = hfer.call_type
         join hpfm_lov_value hflv2 on hflv2.lov_code = 'HPFM.FLAG' and hflv2.value = hfer.sync_flag

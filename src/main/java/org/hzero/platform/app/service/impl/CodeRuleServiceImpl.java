@@ -160,12 +160,12 @@ public class CodeRuleServiceImpl implements CodeRuleService {
         DefaultCodeRuleBuilder.CodeRuleKey codeRuleKey = codeRuleDetail.getCodeRuleKey();
         if (codeRuleKey != null && codeRuleKey.getPrevious() != null) {
             CodeRuleValue codeRuleValue = codeRuleValueRepository.selectOne(new CodeRuleValue()
-                    .setRuleLevel(codeRuleKey.getLevel()).setRuleDetailId(codeRuleDetail.getRuleDetailId()).setLevelValue(codeRuleKey.getLevelValue()));
+                    .setRuleLevel(codeRuleKey.getPreviousLevel()).setRuleDetailId(codeRuleDetail.getRuleDetailId()).setLevelValue(codeRuleKey.getPreviousLevelValue()));
             if (codeRuleValue == null) {
                 codeRuleValue = new CodeRuleValue()
                         .setRuleDetailId(codeRuleDetail.getRuleDetailId())
-                        .setRuleLevel(codeRuleKey.getLevel())
-                        .setLevelValue(codeRuleKey.getLevelValue())
+                        .setRuleLevel(codeRuleKey.getPreviousLevel())
+                        .setLevelValue(codeRuleKey.getPreviousLevelValue())
                         .setCurrentValue(codeRuleDetail.getCurrentValue())
                         .setTenantId(codeRuleDetail.getTenantId())
                         .setResetDate(codeRuleDetail.getResetDate());

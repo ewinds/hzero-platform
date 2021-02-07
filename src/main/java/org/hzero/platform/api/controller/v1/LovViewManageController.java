@@ -142,6 +142,15 @@ public class LovViewManageController extends BaseController {
         return Results.success();
     }
 
+    @ApiOperation("删除值集视图头")
+    @Permission(level = ResourceLevel.ORGANIZATION)
+    @DeleteMapping("/lov-view-headers/delete")
+    public ResponseEntity deleteLovViewHeader(
+            @PathVariable("organizationId") Long tenantId, @RequestBody @Encrypt LovViewHeader lovViewHeader) {
+        this.lovViewHeaderService.deleteLovViewHeader(lovViewHeader);
+        return Results.success();
+    }
+
     @SuppressWarnings("rawtypes")
     @ApiOperation("批量删除值集视图行")
     @Permission(level = ResourceLevel.ORGANIZATION)

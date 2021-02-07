@@ -1,16 +1,16 @@
 package org.hzero.platform.api.controller.v1;
 
-import io.choerodon.core.domain.Page;
-import io.choerodon.mybatis.pagehelper.annotation.SortDefault;
-import io.choerodon.mybatis.pagehelper.domain.PageRequest;
-import io.choerodon.swagger.annotation.CustomPageRequest;
-import io.choerodon.swagger.annotation.Permission;
-import io.swagger.annotations.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.core.base.BaseController;
 import org.hzero.core.util.Results;
+import org.hzero.platform.api.dto.LovAggregateDTO;
 import org.hzero.platform.api.dto.LovValueDTO;
 import org.hzero.platform.app.service.LovService;
 import org.hzero.platform.app.service.LovValueService;
@@ -21,12 +21,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
+
 import springfox.documentation.annotations.ApiIgnore;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import io.choerodon.core.domain.Page;
+import io.choerodon.mybatis.pagehelper.annotation.SortDefault;
+import io.choerodon.mybatis.pagehelper.domain.PageRequest;
+import io.choerodon.swagger.annotation.CustomPageRequest;
+import io.choerodon.swagger.annotation.Permission;
+
+import io.swagger.annotations.*;
 
 /**
  * 值集API v1
@@ -54,9 +58,9 @@ public class LovController extends BaseController {
             @ApiParam(value = "租户ID") @RequestParam(required = false) Long tenantId) {
         // 指定租户不等于当前租户，只允许访问 public 值集
         if (tenantId != null && !Objects.equals(tenantId, organizationId)) {
-            return commonResult(this.lovService.queryLovInfo(lovCode, tenantId, !Objects.equals(tenantId, BaseConstants.DEFAULT_TENANT_ID)), false);
+            return commonResult(this.lovService.queryLovInfo(lovCode, tenantId, null, !Objects.equals(tenantId, BaseConstants.DEFAULT_TENANT_ID)), false);
         } else {
-            return commonResult(this.lovService.queryLovInfo(lovCode, organizationId), false);
+            return commonResult(this.lovService.queryLovInfo(lovCode, organizationId, null), false);
         }
     }
 
@@ -88,9 +92,9 @@ public class LovController extends BaseController {
             @ApiParam(value = "租户ID") @RequestParam(required = false) Long tenantId) {
         String sql;
         if (tenantId != null && !Objects.equals(tenantId, organizationId)) {
-            sql = this.lovService.queryLovSql(lovCode, tenantId, !Objects.equals(tenantId, BaseConstants.DEFAULT_TENANT_ID));
+            sql = this.lovService.queryLovSql(lovCode, tenantId, null, !Objects.equals(tenantId, BaseConstants.DEFAULT_TENANT_ID));
         } else {
-            sql = this.lovService.queryLovSql(lovCode, organizationId);
+            sql = this.lovService.queryLovSql(lovCode, organizationId,null);
         }
         if (StringUtils.isEmpty(sql)) {
             return Results.success();
@@ -107,9 +111,9 @@ public class LovController extends BaseController {
             @ApiParam(value = "租户ID") @RequestParam(required = false) Long tenantId) {
         String sql;
         if (tenantId != null && !Objects.equals(tenantId, organizationId)) {
-            sql = this.lovService.queryLovTranslationSql(lovCode, tenantId, !Objects.equals(tenantId, BaseConstants.DEFAULT_TENANT_ID));
+            sql = this.lovService.queryLovTranslationSql(lovCode, tenantId, null, !Objects.equals(tenantId, BaseConstants.DEFAULT_TENANT_ID));
         } else {
-            sql = this.lovService.queryLovTranslationSql(lovCode, organizationId);
+            sql = this.lovService.queryLovTranslationSql(lovCode, organizationId, null);
         }
         if (StringUtils.isEmpty(sql)) {
             return Results.success();
@@ -162,7 +166,7 @@ public class LovController extends BaseController {
         if (tenantId != null) {
             organizationId = tenantId;
         }
-        return commonResult(this.lovValueService.batchQueryLovValue(queryMap, organizationId), false);
+        return commonResult(this.lovValueService.batchQueryLovValue(queryMap, organizationId, null), false);
     }
 
     @ApiOperation("根据父值集值获取子值集值")
@@ -216,7 +220,7 @@ public class LovController extends BaseController {
     public ResponseEntity<Lov> queryLovInfoSite(
             @ApiParam(value = "值集代码", required = true) @RequestParam String lovCode,
             @ApiParam("租户ID") @RequestParam(required = false) Long tenantId) {
-        return commonResult(this.lovService.queryLovInfo(lovCode, tenantId), false);
+        return commonResult(this.lovService.queryLovInfo(lovCode, tenantId, null), false);
     }
 
     @ApiOperation("集成获取值集数据")
@@ -239,7 +243,7 @@ public class LovController extends BaseController {
     public ResponseEntity<String> queryLovSqlSite(
             @ApiParam(value = "值集代码", required = true) @RequestParam String lovCode,
             @ApiParam("租户ID") @RequestParam(required = false) Long tenantId) {
-        String sql = this.lovService.queryLovSql(lovCode, tenantId);
+        String sql = this.lovService.queryLovSql(lovCode, tenantId, null);
         if (StringUtils.isEmpty(sql)) {
             return Results.success();
         }
@@ -252,7 +256,7 @@ public class LovController extends BaseController {
     public ResponseEntity<String> queryLovTranslationSqlSite(
             @ApiParam(value = "值集代码", required = true) @RequestParam String lovCode,
             @ApiParam("租户ID") @RequestParam(required = false) Long tenantId) {
-        String sql = this.lovService.queryLovTranslationSql(lovCode, tenantId);
+        String sql = this.lovService.queryLovTranslationSql(lovCode, tenantId, null);
         if (StringUtils.isEmpty(sql)) {
             return Results.success();
         }
@@ -291,7 +295,7 @@ public class LovController extends BaseController {
     public ResponseEntity<Map<String, List<LovValueDTO>>> batchQueryLovValueSite(
             @RequestParam Map<String, String> queryMap,
             @RequestParam(required = false) Long tenantId) {
-        return commonResult(this.lovValueService.batchQueryLovValue(queryMap, tenantId), false);
+        return commonResult(this.lovValueService.batchQueryLovValue(queryMap, tenantId, null), false);
     }
 
     @ApiOperation("根据父值集值获取子值集值")
@@ -325,6 +329,22 @@ public class LovController extends BaseController {
             @RequestParam Map<String, String> queryMap,
             @RequestParam(required = false) Long tenantId) {
         return commonResult(this.lovValueService.queryLovValueTree(queryMap, tenantId), true);
+    }
+
+    @ApiOperation("聚合获取值集头行数据")
+    @Permission(permissionLogin = true)
+    @GetMapping(path = "/lovs/aggregate")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "lovCode", value = "值集编码", paramType = "query", required = true),
+            @ApiImplicitParam(name = "tenantId", value = "租户ID", paramType = "query", defaultValue = "0"),
+            @ApiImplicitParam(name = "lang", value = "语言", paramType = "query"),
+            @ApiImplicitParam(name = "tag", value = "标记，仅独立值集时可作为查询条件传递", paramType = "query")
+    })
+    public ResponseEntity<LovAggregateDTO> queryLovAggregateLovValues(@RequestParam("lovCode") String lovCode,
+            @RequestParam(name = "tenantId", required = false) Long tenantId,
+            @RequestParam(name = "lang", required = false) String lang,
+            @RequestParam(name = "tag", required = false) String tag) {
+        return commonResult(this.lovService.queryLovAggregateLovValues(lovCode, tenantId, lang, tag), true);
     }
 
     /**

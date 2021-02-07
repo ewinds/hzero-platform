@@ -2,7 +2,6 @@ package org.hzero.platform.api.controller.v1;
 
 import java.util.List;
 
-import org.apache.commons.collections4.MapUtils;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.core.base.BaseController;
 import org.hzero.core.util.Results;
@@ -15,7 +14,6 @@ import org.hzero.platform.domain.service.PromptDomainService;
 import org.hzero.starter.keyencrypt.core.Encrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -105,7 +103,6 @@ public class PromptManagerSiteController extends BaseController {
     @Permission(level = ResourceLevel.SITE)
     @PostMapping("/insert")
     public ResponseEntity insertPrompt(@RequestBody @Encrypt Prompt prompt) {
-        Assert.isTrue(MapUtils.isNotEmpty(prompt.getPromptConfigs()), BaseConstants.ErrorCode.DATA_INVALID);
         SecurityTokenHelper.validTokenIgnoreInsert(prompt);
         return Results.success(promptService.insertPromptDescription(prompt, prompt.getTenantId()));
     }
@@ -114,7 +111,6 @@ public class PromptManagerSiteController extends BaseController {
     @Permission(level = ResourceLevel.SITE)
     @PutMapping("/update")
     public ResponseEntity updatePrompt(@RequestBody @Encrypt Prompt prompt) {
-        Assert.isTrue(MapUtils.isNotEmpty(prompt.getPromptConfigs()), BaseConstants.ErrorCode.DATA_INVALID);
         SecurityTokenHelper.validTokenIgnoreInsert(prompt);
         return Results.success(promptService.updatePromptDescription(prompt, prompt.getTenantId()));
     }

@@ -4,24 +4,27 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.validation.constraints.NotNull;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
-import io.choerodon.mybatis.domain.AuditDomain;
-import io.choerodon.mybatis.annotation.ModifyAudit;
-import io.choerodon.mybatis.annotation.VersionAudit;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
 import org.hzero.boot.platform.lov.annotation.LovValue;
 import org.hzero.core.util.FileUtils;
 import org.hzero.core.util.Regexs;
 import org.hzero.starter.keyencrypt.core.Encrypt;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import io.choerodon.mybatis.annotation.ModifyAudit;
+import io.choerodon.mybatis.annotation.MultiLanguage;
+import io.choerodon.mybatis.annotation.MultiLanguageField;
+import io.choerodon.mybatis.annotation.VersionAudit;
+import io.choerodon.mybatis.domain.AuditDomain;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * 数据源驱动配置
@@ -32,6 +35,7 @@ import org.hzero.starter.keyencrypt.core.Encrypt;
 @VersionAudit
 @ModifyAudit
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
+@MultiLanguage
 @Table(name = "hpfm_datasource_driver")
 public class DatasourceDriver extends AuditDomain {
 
@@ -64,6 +68,7 @@ public class DatasourceDriver extends AuditDomain {
     @ApiModelProperty(value = "驱动名称")
     @NotBlank
 	@Length(max = 255)
+	@MultiLanguageField
     private String driverName;
     @ApiModelProperty(value = "驱动描述")
 	@Length(max = 480)
@@ -89,6 +94,7 @@ public class DatasourceDriver extends AuditDomain {
     private Integer enabledFlag;
     @ApiModelProperty(value = "租户ID,hpfm_tenant.tenant_id")
     @NotNull
+	@MultiLanguageField
     private Long tenantId;
 
 	//

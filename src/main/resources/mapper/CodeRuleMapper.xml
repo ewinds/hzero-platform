@@ -6,7 +6,7 @@
         SELECT
             hcr.rule_id,
             hcr.rule_code,
-            hcr.rule_name,
+            hcrt.rule_name,
             hcr.description,
             hcr.rule_level,
             hcr.object_version_number,
@@ -19,8 +19,10 @@
             hpfm_code_rule hcr ON hcr.rule_level = hflv.value
         JOIN
             hpfm_tenant ht ON ht.tenant_id = hcr.tenant_id
-        LEFT JOIN
+        JOIN
             hpfm_tenant_tl httl ON ht.tenant_id = httl.tenant_id AND httl.lang = #{lang}
+        JOIN
+            hpfm_code_rule_tl hcrt ON hcr.rule_id = hcrt.rule_id AND hcrt.lang = #{lang}
         WHERE
         hflv.lov_code = 'HPFM.LEVEL'
         <if test="ruleCode != null">
@@ -29,7 +31,7 @@
         </if>
         <if test="ruleName != null">
         <bind name="ruleNameLike" value="'%' + ruleName + '%'"/>
-            AND hcr.rule_name LIKE #{ruleNameLike}
+            AND hcrt.rule_name LIKE #{ruleNameLike}
         </if>
         <if test="description != null">
         <bind name="descriptionLike" value="'%' + description + '%'"/>
@@ -47,10 +49,11 @@
     </select>
 
     <select id="selectCodeRuleByDetailId" resultType="org.hzero.platform.domain.entity.CodeRule">
+        <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
         SELECT
             hcr.rule_id,
             hcr.rule_code,
-            hcr.rule_name,
+            hcrt.rule_name,
             hcr.rule_level,
             hcr.tenant_id,
             hcr.description
@@ -58,6 +61,7 @@
             hpfm_code_rule_detail hcrde
                 JOIN hpfm_code_rule_dist hcrdi ON hcrde.rule_dist_id = hcrdi.rule_dist_id
                 JOIN hpfm_code_rule hcr ON hcrdi.rule_id = hcr.rule_id
+                JOIN hpfm_code_rule_tl hcrt ON hcr.rule_id = hcrt.rule_id AND hcrt.lang = #{lang}
         WHERE
             hcrde.rule_detail_id = #{ruleDetailId}
     </select>

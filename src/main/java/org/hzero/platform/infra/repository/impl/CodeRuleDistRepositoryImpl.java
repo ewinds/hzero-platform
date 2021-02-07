@@ -1,8 +1,8 @@
 package org.hzero.platform.infra.repository.impl;
 
-import java.util.List;
-
+import io.choerodon.core.exception.CommonException;
 import org.apache.commons.collections4.CollectionUtils;
+import org.hzero.boot.platform.code.constant.CodeConstants;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.mybatis.base.impl.BaseRepositoryImpl;
 import org.hzero.platform.api.dto.CodeRuleDistDTO;
@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import io.choerodon.core.exception.CommonException;
+import java.util.List;
 
 /**
  * <p>
@@ -94,6 +94,9 @@ public class CodeRuleDistRepositoryImpl extends BaseRepositoryImpl<CodeRuleDist>
         List<CodeRuleDetail> codeRuleDetailList = codeRuleRepository.getCodeRuleListFromCache(oldKey);
         // 将是否启用过设置为null，表示不更新这个字段
         codeRuleDist.setUsedFlag(null);
+        if (CodeConstants.CodeRuleLevelCode.GLOBAL.equals(codeRuleDist.getLevelCode())) {
+            codeRuleDist.setLevelValue(CodeConstants.CodeRuleLevelCode.GLOBAL);
+        }
         this.updateByPrimaryKeySelective(codeRuleDist);
         // 更新redis
         codeRuleRepository.deleteCache(oldKey);

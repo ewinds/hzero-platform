@@ -1,8 +1,9 @@
 package org.hzero.platform.app.service;
 
-import org.hzero.platform.domain.entity.FormLine;
-
 import java.util.List;
+
+import org.hzero.boot.platform.lov.dto.LovValueDTO;
+import org.hzero.platform.domain.entity.FormLine;
 
 /**
  * 表单配置行应用服务
@@ -51,4 +52,14 @@ public interface FormLineService {
      * @return 表单配置行
      */
     List<FormLine> listFormLineByHeaderId(Long formHeaderId, Long tenantId);
+
+    /**
+     * 翻译值集/值集视图类型表单值
+     *
+     * @param organizationId 租户Id
+     * @param formLineId 表单行Id
+     * @param params 翻译参数
+     * @return 翻译结果
+     */
+    List<LovValueDTO> translateValueSet(Long organizationId, Long formLineId, List<String> params);
 }

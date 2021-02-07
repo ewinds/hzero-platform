@@ -2,10 +2,22 @@ package org.hzero.platform.api.controller.v1;
 
 import java.util.Optional;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
+import org.hzero.common.HZeroConstant;
+import org.hzero.core.exception.NotLoginException;
+import org.hzero.core.util.Results;
+import org.hzero.platform.api.dto.RoleDTO;
+import org.hzero.platform.app.service.DatasourceInfoService;
+import org.hzero.platform.app.service.EntityTableService;
+import org.hzero.platform.app.service.LovService;
+import org.hzero.platform.config.PlatformSwaggerApiConfig;
+import org.hzero.platform.domain.repository.ConfigRepository;
+import org.hzero.platform.domain.repository.PermissionRangeRepository;
+import org.hzero.platform.domain.repository.ProfileValueRepository;
 import org.hzero.platform.domain.repository.ResponseMessageRepository;
+import org.hzero.platform.domain.service.CodeRuleDomainService;
+import org.hzero.platform.domain.service.PromptDomainService;
+import org.hzero.platform.infra.feign.HiamRemoteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,20 +29,8 @@ import io.choerodon.core.oauth.CustomUserDetails;
 import io.choerodon.core.oauth.DetailsHelper;
 import io.choerodon.swagger.annotation.Permission;
 
-import org.hzero.common.HZeroConstant;
-import org.hzero.core.exception.NotLoginException;
-import org.hzero.core.util.Results;
-import org.hzero.platform.api.dto.RoleDTO;
-import org.hzero.platform.app.service.DatabaseService;
-import org.hzero.platform.app.service.DatasourceInfoService;
-import org.hzero.platform.app.service.EntityTableService;
-import org.hzero.platform.config.PlatformSwaggerApiConfig;
-import org.hzero.platform.domain.repository.ConfigRepository;
-import org.hzero.platform.domain.repository.PermissionRangeRepository;
-import org.hzero.platform.domain.repository.ProfileValueRepository;
-import org.hzero.platform.domain.service.CodeRuleDomainService;
-import org.hzero.platform.domain.service.PromptDomainService;
-import org.hzero.platform.infra.feign.HiamRemoteService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 /**
  * 数据缓存工具接口
@@ -48,10 +48,10 @@ public class ToolCacheController {
     private final PromptDomainService promptDomainService;
     private final CodeRuleDomainService codeRuleDomainService;
     private final PermissionRangeRepository permissionRangeRepository;
-    private final DatabaseService databaseService;
     private final DatasourceInfoService datasourceRelService;
     private final EntityTableService entityTableService;
     private final ResponseMessageRepository messageRepository;
+    private final LovService lovService;
 
     @Autowired
     public ToolCacheController(HiamRemoteService hiamRemoteService,
@@ -60,20 +60,20 @@ public class ToolCacheController {
                                PromptDomainService promptDomainService,
                                CodeRuleDomainService codeRuleDomainService,
                                PermissionRangeRepository permissionRangeRepository,
-                               DatabaseService databaseService,
                                DatasourceInfoService datasourceRelService,
                                EntityTableService entityTableService,
-                               ResponseMessageRepository messageRepository) {
+                               ResponseMessageRepository messageRepository,
+                               LovService lovService) {
         this.hiamRemoteService = hiamRemoteService;
         this.profileValueRepository = profileValueRepository;
         this.configRepository = configRepository;
         this.promptDomainService = promptDomainService;
         this.codeRuleDomainService = codeRuleDomainService;
         this.permissionRangeRepository = permissionRangeRepository;
-        this.databaseService = databaseService;
         this.datasourceRelService = datasourceRelService;
         this.entityTableService = entityTableService;
         this.messageRepository = messageRepository;
+        this.lovService = lovService;
     }
 
 
@@ -122,15 +122,6 @@ public class ToolCacheController {
         return Results.success();
     }
 
-    @ApiOperation(value = "缓存 数据库应用 到Redis")
-    @Permission(permissionLogin = true)
-    @PostMapping("/database")
-    public ResponseEntity<Void> initDatabase() {
-        checkSuperAdmin();
-        databaseService.initAllData();
-        return Results.success();
-    }
-
     @ApiOperation(value = "缓存 数据源配置 到Redis")
     @Permission(permissionLogin = true)
     @PostMapping("/datasource")
@@ -155,6 +146,15 @@ public class ToolCacheController {
     public ResponseEntity<Void> initResponseMessage() {
         checkSuperAdmin();
         messageRepository.initAllReturnMessageToRedis();
+        return Results.success();
+    }
+
+    @ApiOperation(value = "刷新值集-清除Redis缓存")
+    @Permission(permissionLogin = true)
+    @PostMapping("/lov-all")
+    public ResponseEntity<Void> initLovCache() {
+        checkSuperAdmin();
+        lovService.initLovCache();
         return Results.success();
     }
 

@@ -1,11 +1,12 @@
 package org.hzero.platform.infra.mapper;
 
-import io.choerodon.mybatis.common.BaseMapper;
-
 import java.util.List;
 
 import org.apache.ibatis.annotations.Param;
+import org.hzero.platform.api.dto.LovViewAggregateDTO;
 import org.hzero.platform.domain.entity.LovViewHeader;
+
+import io.choerodon.mybatis.common.BaseMapper;
 
 /**
  * <p>
@@ -51,5 +52,14 @@ public interface LovViewHeaderMapper extends BaseMapper<LovViewHeader> {
      * @return
      */
     LovViewHeader selectLovViewHeaderByPrimaryKey(@Param("viewHeaderId") Long viewHeaderId, @Param("tenantId") Long tenantId);
-    
+
+    /**
+     * 聚合获取值集视图头行信息
+     *
+     * @param viewCode  视图编码
+     * @param tenantId  租户Id
+     * @param lang      语言
+     * @return 查询结果
+     */
+    LovViewAggregateDTO selectLovViewAggregate(@Param("viewCode") String viewCode, @Param("tenantId") Long tenantId, @Param("lang") String lang);
 }

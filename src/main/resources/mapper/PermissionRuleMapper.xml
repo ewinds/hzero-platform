@@ -36,7 +36,7 @@
         SELECT
             hpr.rule_id,
             hpr.rule_code,
-            hpr.rule_name,
+            hprt.rule_name,
             hpr.description,
             hpr.sql_value,
             hpr.tenant_id,
@@ -47,6 +47,8 @@
             httl.tenant_name
         FROM
             hpfm_permission_rule hpr
+        left join hpfm_permission_rule_tl hprt on hprt.rule_id = hpr.rule_id
+        and hprt.lang = #{lang}
         join hpfm_tenant ht on ht.tenant_id = hpr.tenant_id
         LEFT JOIN hpfm_tenant_tl httl ON ht.tenant_id = httl.tenant_id AND httl.lang = #{lang}
         WHERE
@@ -60,7 +62,7 @@
         </if>
         <if test="ruleName != null and ruleName != ''">
             <bind name="nameLike" value="'%' + ruleName + '%'"/>
-            AND hpr.rule_name LIKE #{nameLike}
+            AND hprt.rule_name LIKE #{nameLike}
         </if>
         <if test="enabledFlag != null">
             AND hpr.enabled_flag = #{enabledFlag}
@@ -76,7 +78,7 @@
         SELECT
         hpr.rule_id,
         hpr.rule_code,
-        hpr.rule_name,
+        hprt.rule_name,
         hpr.description,
         hpr.sql_value,
         hpr.tenant_id,
@@ -87,6 +89,8 @@
         httl.tenant_name
         FROM
         hpfm_permission_rule hpr
+        left join hpfm_permission_rule_tl hprt on hprt.rule_id = hpr.rule_id
+        and hprt.lang = #{lang}
         join hpfm_tenant ht on ht.tenant_id = hpr.tenant_id
         LEFT JOIN hpfm_tenant_tl httl ON ht.tenant_id = httl.tenant_id AND httl.lang = #{lang}
         WHERE
@@ -98,7 +102,7 @@
         </if>
         <if test="ruleName != null and ruleName != ''">
             <bind name="nameLike" value="'%' + ruleName + '%'"/>
-            AND hpr.rule_name LIKE #{nameLike}
+            AND hprt.rule_name LIKE #{nameLike}
         </if>
         <if test="enabledFlag != null">
             AND hpr.enabled_flag = #{enabledFlag}
@@ -113,7 +117,7 @@
         SELECT
             hpr.rule_id,
             hpr.rule_code,
-            hpr.rule_name,
+            hprt.rule_name,
             hpr.description,
             hpr.sql_value,
             hpr.tenant_id,
@@ -124,6 +128,8 @@
             httl.tenant_name
         FROM
             hpfm_permission_rule hpr
+        left join hpfm_permission_rule_tl hprt on hprt.rule_id = hpr.rule_id
+        and hprt.lang = #{lang}
         join hpfm_tenant ht on ht.tenant_id = hpr.tenant_id
         LEFT JOIN hpfm_tenant_tl httl ON ht.tenant_id = httl.tenant_id AND httl.lang = #{lang}
         WHERE
@@ -135,7 +141,7 @@
         </if>
         <if test="ruleName != null and ruleName != ''">
             <bind name="nameLike" value="'%' + ruleName + '%'"/>
-            AND hpr.rule_name LIKE #{nameLike}
+            AND hprt.rule_name LIKE #{nameLike}
         </if>
             AND hpr.enabled_flag = 1
     </select>

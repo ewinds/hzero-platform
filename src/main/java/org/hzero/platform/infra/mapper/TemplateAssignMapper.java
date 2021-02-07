@@ -1,10 +1,9 @@
 package org.hzero.platform.infra.mapper;
 
+import io.choerodon.mybatis.common.BaseMapper;
 import org.apache.ibatis.annotations.Param;
 import org.hzero.platform.api.dto.TemplateAssignDTO;
-import org.hzero.platform.domain.entity.CommonTemplate;
 import org.hzero.platform.domain.entity.TemplateAssign;
-import io.choerodon.mybatis.common.BaseMapper;
 
 import java.util.List;
 

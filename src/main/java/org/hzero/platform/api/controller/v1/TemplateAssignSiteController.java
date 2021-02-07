@@ -1,34 +1,31 @@
 package org.hzero.platform.api.controller.v1;
 
-import java.util.List;
-
-import org.hzero.core.base.BaseConstants;
-import org.hzero.core.base.BaseController;
-import org.hzero.core.util.Results;
-import org.hzero.platform.api.dto.TemplateAssignDTO;
-import org.hzero.platform.app.service.TemplateAssignService;
-import org.hzero.platform.config.PlatformSwaggerApiConfig;
-import org.hzero.platform.domain.entity.CommonTemplate;
-import org.hzero.platform.domain.entity.TemplateAssign;
-import org.hzero.platform.domain.repository.TemplateAssignRepository;
-import org.hzero.starter.keyencrypt.core.Encrypt;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import springfox.documentation.annotations.ApiIgnore;
-
 import io.choerodon.core.domain.Page;
 import io.choerodon.core.iam.ResourceLevel;
 import io.choerodon.mybatis.pagehelper.annotation.SortDefault;
 import io.choerodon.mybatis.pagehelper.domain.PageRequest;
 import io.choerodon.mybatis.pagehelper.domain.Sort;
 import io.choerodon.swagger.annotation.Permission;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.hzero.core.base.BaseConstants;
+import org.hzero.core.base.BaseController;
+import org.hzero.core.util.Results;
+import org.hzero.platform.api.dto.TemplateAssignDTO;
+import org.hzero.platform.app.service.TemplateAssignService;
+import org.hzero.platform.config.PlatformSwaggerApiConfig;
+import org.hzero.platform.domain.entity.ContentTemplate;
+import org.hzero.platform.domain.entity.TemplateAssign;
+import org.hzero.platform.domain.repository.TemplateAssignRepository;
+import org.hzero.starter.keyencrypt.core.Encrypt;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
+
+import java.util.List;
 
 /**
  * 分配模板 管理 API
@@ -102,14 +99,14 @@ public class TemplateAssignSiteController extends BaseController {
     @Permission(level = ResourceLevel.SITE)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "sourceType", value = "关联模板的来源类型，根据引用模板的功能自行定义", paramType = "query",
-                            dataType = "string", required = true),
+                    dataType = "string", required = true),
             @ApiImplicitParam(name = "sourceKey", value = "关联模板的来源KEY", paramType = "query", dataType = "string",
-                            required = true),
+                    required = true),
             @ApiImplicitParam(name = "tenantId", value = "来源所属租户Id", paramType = "query", required = true)})
     @GetMapping("/assignable")
     public ResponseEntity<Page<TemplateAssignDTO>> selectAssignableTemplates(
-                    @Encrypt TemplateAssignDTO templates,
-                    @ApiIgnore @SortDefault(value = CommonTemplate.FIELD_TEMPLATE_ID, direction = Sort.Direction.DESC) PageRequest pageRequest) {
+            @Encrypt TemplateAssignDTO templates,
+            @ApiIgnore @SortDefault(value = ContentTemplate.FIELD_TEMPLATE_ID, direction = Sort.Direction.DESC) PageRequest pageRequest) {
         return Results.success(templateAssignRepository.selectAssignableTemplates(pageRequest, templates));
     }
 

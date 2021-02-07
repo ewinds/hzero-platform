@@ -358,6 +358,8 @@ public class LovViewVO {
         private String dataIndex;
         @ApiModelProperty("列宽")
         private Integer width;
+        @ApiModelProperty("数据类型")
+        private String dataType;
 
         /**
          * @return 标题
@@ -392,6 +394,15 @@ public class LovViewVO {
             this.width = width;
         }
 
+        public String getDataType() {
+            return dataType;
+        }
+
+        public TableField setDataType(String dataType) {
+            this.dataType = dataType;
+            return this;
+        }
+
         public TableField() {
         }
 
@@ -401,11 +412,22 @@ public class LovViewVO {
             this.width = width;
         }
 
-        @Override
-        public String toString() {
-            return "TableField [title=" + title + ", dataIndex=" + dataIndex + ", width=" + width + "]";
+        public TableField(String title, String dataIndex, Integer width, String dataType) {
+            this.title = title;
+            this.dataIndex = dataIndex;
+            this.width = width;
+            this.dataType = dataType;
         }
 
+        @Override
+        public String toString() {
+            return "TableField{" +
+                    "title='" + title + '\'' +
+                    ", dataIndex='" + dataIndex + '\'' +
+                    ", width=" + width +
+                    ", dataType='" + dataType + '\'' +
+                    '}';
+        }
     }
 
     /**
@@ -481,7 +503,7 @@ public class LovViewVO {
      * @return 表格列
      */
     private TableField convertLineToTableField(LovViewLine line) {
-        return new TableField(line.getDisplay(), line.getFieldName(), line.getTableFieldWidth());
+        return new TableField(line.getDisplay(), line.getFieldName(), line.getTableFieldWidth(), line.getDataType());
     }
 
     @Override

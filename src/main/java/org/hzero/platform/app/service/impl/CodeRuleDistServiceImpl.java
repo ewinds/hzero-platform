@@ -36,12 +36,13 @@ public class CodeRuleDistServiceImpl implements CodeRuleDistService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CodeRuleDist insertOrUpdate(Long tenantId, CodeRuleDist codeRuleDist) {
-        codeRuleDist.setTenantId(tenantId);
         // 判断当前新增的数据是当前租户的
         if (!CodeRule.judgeDataLegality(codeRuleRepository, tenantId, codeRuleDist.getRuleId())) {
             throw new CommonException(BaseConstants.ErrorCode.DATA_INVALID);
         }
         CodeRule codeRule = codeRuleRepository.selectByPrimaryKey(codeRuleDist.getRuleId());
+        tenantId = codeRule.getTenantId();
+        codeRuleDist.setTenantId(tenantId);
         Assert.notNull(codeRule, BaseConstants.ErrorCode.DATA_NOT_EXISTS);
         if (codeRuleDist.judgeInsert()) {
             codeRuleDist = codeRuleDistRepository.insertCodeRuleDist(codeRuleDist);
@@ -55,7 +56,7 @@ public class CodeRuleDistServiceImpl implements CodeRuleDistService {
         }
         if (CollectionUtils.isNotEmpty(codeRuleDist.getRuleDetailList())) {
             CodeRuleDist finalCodeRuleDist = codeRuleDist;
-            codeRuleDist.getRuleDetailList().forEach(item -> codeRuleDetailRepository.insertOrUpdate(item.setRuleDistId(finalCodeRuleDist.getRuleDistId()).setTenantId(tenantId)));
+            codeRuleDist.getRuleDetailList().forEach(item -> codeRuleDetailRepository.insertOrUpdate(item.setRuleDistId(finalCodeRuleDist.getRuleDistId())));
         }
         return codeRuleDist;
     }

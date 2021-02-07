@@ -134,7 +134,6 @@ public class LovViewManageSiteController extends BaseController {
         return Results.success(lovViewLine);
     }
 
-    @SuppressWarnings("rawtypes")
     @ApiOperation("批量删除值集视图头")
     @Permission(level = ResourceLevel.SITE)
     @DeleteMapping("/lov-view-headers")
@@ -145,7 +144,16 @@ public class LovViewManageSiteController extends BaseController {
         return Results.success();
     }
 
-    @SuppressWarnings("rawtypes")
+    @ApiOperation("删除值集视图头")
+    @Permission(level = ResourceLevel.SITE)
+    @DeleteMapping("/lov-view-headers/delete")
+    public ResponseEntity deleteLovViewHeader(
+            @RequestBody @Encrypt LovViewHeader lovViewHeader
+    ) {
+        this.lovViewHeaderService.deleteLovViewHeader(lovViewHeader);
+        return Results.success();
+    }
+
     @ApiOperation("批量删除值集视图行")
     @Permission(level = ResourceLevel.SITE)
     @DeleteMapping("/lov-view-lines")
@@ -162,7 +170,7 @@ public class LovViewManageSiteController extends BaseController {
     public ResponseEntity copyLovView(
             @ApiParam(value = "复制值集视图时选择的租户Id", required = true) @RequestParam Long tenantId,
             @ApiParam(value = "lov视图编码", required = true) @RequestParam String viewCode,
-            @ApiParam(value = "viewHeaderId", required = true) @RequestParam Long viewHeaderId
+            @ApiParam(value = "viewHeaderId", required = true) @RequestParam @Encrypt Long viewHeaderId
     ) {
         lovViewHeaderService.copyLovView(tenantId, viewCode, viewHeaderId, BaseConstants.Flag.YES);
         return Results.success();

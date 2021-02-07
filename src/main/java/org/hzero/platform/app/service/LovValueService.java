@@ -3,14 +3,15 @@
  */
 package org.hzero.platform.app.service;
 
-import io.choerodon.core.domain.Page;
-import io.choerodon.mybatis.pagehelper.domain.PageRequest;
+import java.util.List;
+import java.util.Map;
+
 import org.hzero.platform.api.dto.LovValueDTO;
 import org.hzero.platform.domain.entity.Lov;
 import org.hzero.platform.domain.entity.LovValue;
 
-import java.util.List;
-import java.util.Map;
+import io.choerodon.core.domain.Page;
+import io.choerodon.mybatis.pagehelper.domain.PageRequest;
 
 /**
  * 值集值App服务
@@ -74,7 +75,7 @@ public interface LovValueService {
      * @param tenantId 租户ID,全局查询时可空
      * @return 参见示例
      */
-    Map<String, List<LovValueDTO>> batchQueryLovValue(Map<String, String> queryMap, Long tenantId);
+    Map<String, List<LovValueDTO>> batchQueryLovValue(Map<String, String> queryMap, Long tenantId, String lang);
 
     /**
      * 插入值集值

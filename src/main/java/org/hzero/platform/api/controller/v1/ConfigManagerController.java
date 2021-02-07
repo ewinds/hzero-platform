@@ -49,7 +49,7 @@ public class ConfigManagerController extends BaseController {
      *
      * @return 通用返回结果
      */
-    @ApiOperation(value = "根据profileId查询租户系统配置信息", notes = "根据profileId查询租户系统配置信息")
+    @ApiOperation(value = "根据租户id查询系统配置", notes = "根据租户id查询系统配置")
     @GetMapping
     @ApiImplicitParams({
             @ApiImplicitParam(name = "organizationId", value = "租户ID", paramType = "path", required = true)

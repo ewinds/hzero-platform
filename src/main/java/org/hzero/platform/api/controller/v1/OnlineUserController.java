@@ -59,10 +59,8 @@ public class OnlineUserController {
     @ApiOperation(value = "在线用户统计")
     @Permission(permissionLogin = true)
     @GetMapping("/online-users/statistics")
-    public ResponseEntity<Page<OnlineUserCountDTO>> countOnlineUser() {
-        Page<OnlineUserCountDTO> page = new Page<>();
-        page.setContent(onlineUserService.countOnlineUser());
-        return Results.success(page);
+    public ResponseEntity<List<OnlineUserCountDTO>> countOnlineUser() {
+        return Results.success(onlineUserService.countOnlineUser());
     }
 
     @ApiOperation(value = "指定时长的在线用户")

@@ -11,6 +11,8 @@ import org.hzero.mybatis.base.impl.BaseRepositoryImpl;
 import org.hzero.mybatis.helper.SecurityTokenHelper;
 import org.hzero.platform.domain.entity.Config;
 import org.hzero.platform.domain.repository.ConfigRepository;
+import org.hzero.platform.domain.vo.TitleConfigCacheVO;
+import org.hzero.platform.infra.constant.Constants;
 import org.hzero.platform.infra.mapper.ConfigMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -40,6 +42,8 @@ public class ConfigRepositoryImpl extends BaseRepositoryImpl<Config> implements 
         if (CollectionUtils.isNotEmpty(configList)) {
             configList.forEach(config -> {
                 this.updateOptional(config, Config.FIELD_CONFIG_VALUE);
+                List<TitleConfigCacheVO> resultMap = configMapper.selectLanguageValueMap(config.getConfigId());
+                config.setLanguageValue(resultMap);
                 config.refreshCache(redisHelper);
             });
         }
@@ -49,10 +53,14 @@ public class ConfigRepositoryImpl extends BaseRepositoryImpl<Config> implements 
     @Override
     public void initAllConfigToRedis() {
         SecurityTokenHelper.close();
-        List<Config> configList = this.selectAll();
-        configList.forEach(config -> redisHelper.strSet(
-                Config.generateCacheKey(config.getConfigCode(), config.getTenantId()),
-                config.getConfigValue()));
+        List<Config> configList = configMapper.selectAll();
+        configList.forEach(config -> {
+            if (Constants.CONFIG_CODE_TITLE.equals(config.getConfigCode())) {
+                List<TitleConfigCacheVO> languageValueMap = configMapper.selectLanguageValueMap(config.getConfigId());
+                config.setLanguageValue(languageValueMap);
+            }
+            config.refreshCache(redisHelper);
+        });
         SecurityTokenHelper.clear();
     }
 
@@ -75,6 +83,8 @@ public class ConfigRepositoryImpl extends BaseRepositoryImpl<Config> implements 
                     if (Objects.equals(config.getTenantId(), tenantId)) {
                         // 更新
                         this.updateOptional(config, Config.FIELD_CONFIG_VALUE);
+                        List<TitleConfigCacheVO> resultMap = configMapper.selectLanguageValueMap(config.getConfigId());
+                        config.setLanguageValue(resultMap);
                         config.refreshCache(redisHelper);
                     } else {
                         // 新增
@@ -102,6 +112,8 @@ public class ConfigRepositoryImpl extends BaseRepositoryImpl<Config> implements 
         config.setConfigId(null);
         config.setTenantId(tenantId);
         this.insertSelective(config);
+        List<TitleConfigCacheVO> resultMap = configMapper.selectLanguageValueMap(config.getConfigId());
+        config.setLanguageValue(resultMap);
         config.refreshCache(redisHelper);
     }
 }

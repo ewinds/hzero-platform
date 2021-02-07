@@ -8,7 +8,7 @@
         SELECT
         hp.profile_id,
         hp.profile_name,
-        hp.description,
+        hpt.description,
         hp.profile_level,
         hp.tenant_id,
         httl.tenant_name,
@@ -16,6 +16,8 @@
         hlvt.meaning
         FROM
         hpfm_profile hp
+        left join hpfm_profile_tl hpt on hpt.profile_id = hp.profile_id
+        and hpt.lang = #{lang}
         join hpfm_lov_value hlv on hp.profile_level = hlv.value and hlv.lov_code = 'HPFM.LEVEL'
         left join hpfm_lov_value_tl hlvt on hlv.lov_value_id = hlvt.lov_value_id AND hlvt.lang = #{lang}
         join hpfm_tenant ht on ht.tenant_id = hp.tenant_id
@@ -35,13 +37,15 @@
         SELECT
         hp.profile_id,
         hp.profile_name,
-        hp.description,
+        hpt.description,
         hp.profile_level,
         hp.tenant_id,
         hp.object_version_number,
         httl.tenant_name
         FROM
         hpfm_profile hp
+        left join hpfm_profile_tl hpt on hpt.profile_id = hp.profile_id
+        and hpt.lang = #{lang}
         join hpfm_tenant ht on ht.tenant_id = hp.tenant_id
         LEFT JOIN hpfm_tenant_tl httl ON ht.tenant_id = httl.tenant_id AND httl.lang = #{lang}
         WHERE
@@ -55,7 +59,7 @@
         </if>
         <if test="description != null">
             <bind name="descriptionLike" value="'%' + description + '%'"/>
-            AND hp.description LIKE #{descriptionLike}
+            AND hpt.description LIKE #{descriptionLike}
         </if>
         <if test="profileLevel != null">
             AND hp.profile_level = #{profileLevel}
@@ -70,13 +74,15 @@
         SELECT
         hp.profile_id,
         hp.profile_name,
-        hp.description,
+        hpt.description,
         hp.profile_level,
         hp.tenant_id,
         hp.object_version_number,
         httl.tenant_name
         FROM
         hpfm_profile hp
+        left join hpfm_profile_tl hpt on hpt.profile_id = hp.profile_id
+        and hpt.lang = #{lang}
         join hpfm_tenant ht on ht.tenant_id = hp.tenant_id
         LEFT JOIN hpfm_tenant_tl httl ON ht.tenant_id = httl.tenant_id AND httl.lang = #{lang}
         WHERE
@@ -94,7 +100,7 @@
         </if>
         <if test="description != null">
             <bind name="descriptionLike" value="'%' + description + '%'"/>
-            AND hp.description LIKE #{descriptionLike}
+            AND hpt.description LIKE #{descriptionLike}
         </if>
     </select>
     <select id="selectProfileValueByOptions" resultType="java.lang.String">

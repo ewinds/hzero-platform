@@ -1,16 +1,15 @@
 package org.hzero.platform.infra.repository.impl;
 
-import io.choerodon.core.domain.Page;
-import io.choerodon.core.exception.CommonException;
-import io.choerodon.mybatis.helper.LanguageHelper;
-import io.choerodon.mybatis.pagehelper.PageHelper;
-import io.choerodon.mybatis.pagehelper.domain.PageRequest;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hzero.common.HZeroCacheKey;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.core.redis.RedisHelper;
 import org.hzero.mybatis.base.impl.BaseRepositoryImpl;
+import org.hzero.platform.api.dto.LovAggregateDTO;
 import org.hzero.platform.domain.entity.Lov;
 import org.hzero.platform.domain.entity.Lov.LovAccessStatus;
 import org.hzero.platform.domain.repository.LovRepository;
@@ -23,8 +22,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import io.choerodon.core.domain.Page;
+import io.choerodon.core.exception.CommonException;
+import io.choerodon.mybatis.helper.LanguageHelper;
+import io.choerodon.mybatis.pagehelper.PageHelper;
+import io.choerodon.mybatis.pagehelper.domain.PageRequest;
 
 /**
  * 值集头RepositoryImpl
@@ -238,6 +240,21 @@ public class LovRepositoryImpl extends BaseRepositoryImpl<Lov> implements LovRep
     @Override
     public List<String> getLovOrViewFromRedis(String cachePrefix, String code, Long tenantId, String lang) {
         return redisHelper.hshMultiGet(cachePrefix + code, listHashKey(tenantId, lang));
+    }
+
+    @Override
+    public Lov selectLovByViewCodeAndTenant(String viewCode, Long tenantId) {
+        Lov lov = lovMapper.selectLovByViewCodeAndTenant(viewCode, tenantId);
+        if (Objects.isNull(lov)) {
+            lov = lovMapper.selectLovByViewCodeAndTenant(viewCode, BaseConstants.DEFAULT_TENANT_ID);
+        }
+        Assert.notNull(lov, BaseConstants.ErrorCode.NOT_NULL);
+        return lov;
+    }
+
+    @Override
+    public LovAggregateDTO selectLovAggregateLovValues(String lovCode, Long tenantId, String lang, String tag) {
+        return lovMapper.selectLovAggregateLovValues(lovCode, tenantId, lang, tag);
     }
 
     private Collection<String> listHashKey(Long tenantId, String lang) {

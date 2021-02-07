@@ -13,8 +13,8 @@ import org.hzero.platform.app.service.OnlineUserService;
 import org.hzero.platform.domain.entity.AuditLogin;
 import org.hzero.platform.domain.repository.AuditLoginRepository;
 import org.hzero.platform.infra.constant.Constants;
-import org.hzero.websocket.redis.SessionUserRedis;
-import org.hzero.websocket.vo.UserVO;
+import org.hzero.websocket.redis.OnlineUserRedis;
+import org.hzero.websocket.vo.SessionVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -64,23 +64,23 @@ public class OnlineUserServiceImpl implements OnlineUserService {
 
     @Override
     public List<OnLineUserDTO> listOnlineUser(Long tenantId) {
-        List<UserVO> userList;
+        List<SessionVO> userList;
         if (tenantId != null) {
-            userList = SessionUserRedis.getCache(tenantId);
+            userList = OnlineUserRedis.getCache(tenantId);
         } else {
-            userList = SessionUserRedis.getCache();
+            userList = OnlineUserRedis.getCache();
         }
         List<OnLineUserDTO> onLineUsers = new ArrayList<>();
         if (CollectionUtils.isEmpty(userList)) {
             return onLineUsers;
         }
         // 关联登录审计，获取用户信息
-        List<AuditLogin> auditLoginList = auditLoginRepository.listUserInfo(userList.stream().map(UserVO::getAccessToken).collect(Collectors.toList()));
+        List<AuditLogin> auditLoginList = auditLoginRepository.listUserInfo(userList.stream().map(SessionVO::getAccessToken).collect(Collectors.toList()));
         // 获取当前租户的租户名称
-        List<OnLineUserDTO> onLineUserList = auditLoginRepository.listUserTenant(userList.stream().map(UserVO::getTenantId).collect(Collectors.toList()));
+        List<OnLineUserDTO> onLineUserList = auditLoginRepository.listUserTenant(userList.stream().map(SessionVO::getTenantId).collect(Collectors.toList()));
         Map<Long, String> tenantMap = onLineUserList.stream().collect(Collectors.toMap(OnLineUserDTO::getTenantId, OnLineUserDTO::getTenantName, (k1, k2) -> k2));
         // 组装返回结果
-        for (UserVO user : userList) {
+        for (SessionVO user : userList) {
             OnLineUserDTO onLineUserDTO = new OnLineUserDTO().setUser(user);
             onLineUserDTO.setTenantName(tenantMap.get(user.getTenantId()));
             for (AuditLogin login : auditLoginList) {
@@ -121,7 +121,7 @@ public class OnlineUserServiceImpl implements OnlineUserService {
         });
         Map<Integer, Long> map = loginTime.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
         List<OnlineUserCountDTO> dtos = new ArrayList<>(Constants.OnlineUser.HOURS);
-        for (int i = 2; i < 25; ) {
+        for (int i = 2; i < 25; i++) {
             OnlineUserCountDTO dto = new OnlineUserCountDTO(Integer.toString(i),
                     (map.get(i) == null ? Constants.OnlineUser.INITIAL_ONLINE : map.get(i)) +
                             (map.get(i - 1) == null ? Constants.OnlineUser.INITIAL_ONLINE : map.get(i - 1)));

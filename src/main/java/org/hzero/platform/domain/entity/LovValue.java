@@ -117,7 +117,7 @@ public class LovValue extends AuditDomain {
     @ApiModelProperty("值集值")
     private String value;
     @NotEmpty
-    @Length(max = 240)
+    @Length(max = 480)
     @MultiLanguageField
     @ApiModelProperty("含义")
     private String meaning;

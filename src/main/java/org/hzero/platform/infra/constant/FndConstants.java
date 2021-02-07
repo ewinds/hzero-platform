@@ -175,6 +175,11 @@ public interface FndConstants {
          * API
          */
         String API = "A";
+
+        /**
+         * WebHook
+         */
+        String WEB_HOOK = "W";
     }
 
     /**

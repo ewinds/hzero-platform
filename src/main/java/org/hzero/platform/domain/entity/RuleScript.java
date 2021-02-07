@@ -11,6 +11,8 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
+import io.choerodon.mybatis.annotation.MultiLanguage;
+import io.choerodon.mybatis.annotation.MultiLanguageField;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
 import org.hzero.boot.platform.lov.annotation.LovValue;
@@ -41,6 +43,7 @@ import io.swagger.annotations.ApiModelProperty;
 @ApiModel("规则脚本")
 @VersionAudit
 @ModifyAudit
+@MultiLanguage
 @Table(name = "hpfm_rule_script")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RuleScript extends AuditDomain {
@@ -157,6 +160,7 @@ public class RuleScript extends AuditDomain {
     @Length(max = 240)
     @ApiModelProperty(value = "脚本描述")
     @NotBlank
+    @MultiLanguageField
     private String scriptDescription;
     @ApiModelProperty(value = "脚本类型，HPFM.RULE_SCRIPT_TYPE")
     @NotBlank
@@ -168,6 +172,7 @@ public class RuleScript extends AuditDomain {
     private String scriptContent;
     @ApiModelProperty(value = "租户ID,hpfm_tenant.tenant_id")
     @NotNull
+    @MultiLanguageField
     private Long tenantId;
     @ApiModelProperty(value = "是否启用。1启用，0未启用")
     @NotNull

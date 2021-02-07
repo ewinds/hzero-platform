@@ -13,14 +13,15 @@
     <select id="selectEvent" parameterType="org.hzero.platform.api.dto.EventDTO" resultMap="BaseResultMap">
         <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()" />
         SELECT
-          hfe.event_id,
-          hfe.event_code,
-          hfe.enabled_flag,
-          hfe.event_description,
-          hfe.tenant_id,
-          httl.tenant_name,
-          hfe.object_version_number
+        hfe.event_id,
+        hfe.event_code,
+        hfe.enabled_flag,
+        het.event_description,
+        hfe.tenant_id,
+        httl.tenant_name,
+        hfe.object_version_number
         FROM hpfm_event hfe
+        LEFT JOIN hpfm_event_tl het ON hfe.event_id = het.event_id AND het.lang = #{lang}
         LEFT JOIN hpfm_tenant ht ON ht.tenant_id = hfe.tenant_id
         LEFT JOIN hpfm_tenant_tl httl ON ht.tenant_id = httl.tenant_id AND httl.lang = #{lang}
         <where>
@@ -31,7 +32,7 @@
                 AND hfe.event_code LIKE concat('%', concat(#{eventCode}, '%'))
             </if>
             <if test="eventDescription != null">
-                AND hfe.event_description LIKE concat('%', concat(#{eventDescription}, '%'))
+                AND het.event_description LIKE concat('%', concat(#{eventDescription}, '%'))
             </if>
             <if test="enabledFlag != null">
                 AND hfe.enabled_flag = #{enabledFlag}

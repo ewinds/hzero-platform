@@ -15,6 +15,8 @@ import org.hzero.export.annotation.ExcelSheet;
 @ExcelSheet(zh = "登录信息", en = "audit Login")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class AuditLoginExportForSite {
+    @ExcelColumn(zh = "审计类型", en = "auditTypeMeaning")
+    private String auditTypeMeaning;
     @ExcelColumn(zh = "账号", en = "loginName")
     private String loginName;
     @ExcelColumn(zh = "名称", en = "userName")
@@ -27,10 +29,11 @@ public class AuditLoginExportForSite {
     private Date loginDate;
     @ExcelColumn(zh = "登录地址", en = "loginIp")
     private String loginIp;
-    @ExcelColumn(zh = "登录平台", en = "loginPlatform")
     private String loginPlatform;
     @ExcelColumn(zh = "登录设备", en = "loginDevice")
     private String loginDevice;
+    @ExcelColumn(zh = "登录信息", en = "loginMessage")
+    private String loginMessage;
 
     public String getLoginName() {
         return loginName;
@@ -94,5 +97,21 @@ public class AuditLoginExportForSite {
 
     public void setLoginDevice(String loginDevice) {
         this.loginDevice = loginDevice;
+    }
+
+    public String getAuditTypeMeaning() {
+        return auditTypeMeaning;
+    }
+
+    public void setAuditTypeMeaning(String auditTypeMeaning) {
+        this.auditTypeMeaning = auditTypeMeaning;
+    }
+
+    public String getLoginMessage() {
+        return loginMessage;
+    }
+
+    public void setLoginMessage(String loginMessage) {
+        this.loginMessage = loginMessage;
     }
 }

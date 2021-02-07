@@ -16,9 +16,13 @@ public class PlatformProperties {
     private static final String HTTP_PROTOCOL_SUFFIX = "://";
 
     /**
-     * 启动时是否刷新缓存,默认true
+     * 启动时是否刷新缓存,默认true 这里关闭的话所有缓存都不会刷新
      */
     private Boolean initCache = true;
+    /**
+     * 缓存刷新明细
+     */
+    private InitCache cache = new InitCache();
     /**
      * 平台Http协议,默认http
      */
@@ -113,4 +117,126 @@ public class PlatformProperties {
 
     }
 
+    public InitCache getCache() {
+        return cache;
+    }
+
+    public void setCache(InitCache cache) {
+        this.cache = cache;
+    }
+
+    /**
+     * 初始化缓存
+     */
+    public static class InitCache {
+
+        /**
+         * 是否初始化配置维护到缓存
+         */
+        private boolean profileValue = true;
+        /**
+         * 是否初始化系统配置到缓存
+         */
+        private boolean config = true;
+        /**
+         * 是否初始化多语言到缓存
+         */
+        private boolean prompt = true;
+        /**
+         * 是否初始化返回消息到缓存
+         */
+        private boolean returnMessage = true;
+        /**
+         * 是否初始化编码规则到缓存
+         */
+        private boolean codeRule = true;
+        /**
+         * 是否初始化数据屏蔽范围到缓存
+         */
+        private boolean permissionRange = true;
+        /**
+         * 是否初始化数据源到缓存
+         */
+        private boolean datasource = true;
+        /**
+         * 是否初始化通用模板到缓存
+         */
+        private boolean commonTemplate = true;
+        /**
+         * 是否初始化插件信息到缓存
+         */
+        private boolean plugin = true;
+
+        public boolean isProfileValue() {
+            return profileValue;
+        }
+
+        public void setProfileValue(boolean profileValue) {
+            this.profileValue = profileValue;
+        }
+
+        public boolean isConfig() {
+            return config;
+        }
+
+        public void setConfig(boolean config) {
+            this.config = config;
+        }
+
+        public boolean isPrompt() {
+            return prompt;
+        }
+
+        public void setPrompt(boolean prompt) {
+            this.prompt = prompt;
+        }
+
+        public boolean isReturnMessage() {
+            return returnMessage;
+        }
+
+        public void setReturnMessage(boolean returnMessage) {
+            this.returnMessage = returnMessage;
+        }
+
+        public boolean isCodeRule() {
+            return codeRule;
+        }
+
+        public void setCodeRule(boolean codeRule) {
+            this.codeRule = codeRule;
+        }
+
+        public boolean isPermissionRange() {
+            return permissionRange;
+        }
+
+        public void setPermissionRange(boolean permissionRange) {
+            this.permissionRange = permissionRange;
+        }
+
+        public boolean isDatasource() {
+            return datasource;
+        }
+
+        public void setDatasource(boolean datasource) {
+            this.datasource = datasource;
+        }
+
+        public boolean isCommonTemplate() {
+            return commonTemplate;
+        }
+
+        public void setCommonTemplate(boolean commonTemplate) {
+            this.commonTemplate = commonTemplate;
+        }
+
+        public boolean isPlugin() {
+            return plugin;
+        }
+
+        public void setPlugin(boolean plugin) {
+            this.plugin = plugin;
+        }
+    }
 }

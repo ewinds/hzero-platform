@@ -18,7 +18,7 @@ public interface LovViewDomainService {
      * @param tenantId 租户ID
      * @return Lov视图
      */
-    LovViewVO queryLovViewInfo(String viewCode, Long tenantId);
+    LovViewVO queryLovViewInfo(String viewCode, Long tenantId, String lang, boolean onlyPublic);
 
     /**
      * 更新视图头
@@ -50,4 +50,11 @@ public interface LovViewDomainService {
      * @param siteFlag 平台标识
      */
     void copyLovView(Long tenantId, String viewCode, Long viewHeaderId, Integer siteFlag);
+
+    /**
+     * 删除值集视图
+     *
+     * @param lovViewHeader 删除的数据
+     */
+    void deleteLovViewHeader(LovViewHeader lovViewHeader);
 }

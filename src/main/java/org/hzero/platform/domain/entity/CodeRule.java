@@ -1,33 +1,36 @@
 package org.hzero.platform.domain.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.choerodon.core.exception.CommonException;
-import io.choerodon.mybatis.annotation.ModifyAudit;
-import io.choerodon.mybatis.annotation.VersionAudit;
-import io.choerodon.mybatis.domain.AuditDomain;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import org.apache.commons.collections4.CollectionUtils;
-import org.hibernate.validator.constraints.Length;
-import javax.validation.constraints.NotBlank;
-import org.hibernate.validator.constraints.Range;
-import org.hzero.boot.platform.code.constant.CodeConstants;
-import org.hzero.core.base.BaseConstants;
-import org.hzero.core.util.Regexs;
-import org.hzero.platform.domain.repository.CodeRuleRepository;
-import org.hzero.platform.infra.constant.FndConstants;
-import org.hzero.starter.keyencrypt.core.Encrypt;
+import java.util.Date;
+import java.util.List;
 
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
-import java.util.Date;
-import java.util.List;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.hibernate.validator.constraints.Length;
+import org.hibernate.validator.constraints.Range;
+import org.hzero.boot.platform.code.constant.CodeConstants;
+import org.hzero.core.base.BaseConstants;
+import org.hzero.core.util.Regexs;
+import org.hzero.platform.domain.repository.CodeRuleRepository;
+import org.hzero.starter.keyencrypt.core.Encrypt;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import io.choerodon.mybatis.annotation.ModifyAudit;
+import io.choerodon.mybatis.annotation.MultiLanguage;
+import io.choerodon.mybatis.annotation.MultiLanguageField;
+import io.choerodon.mybatis.annotation.VersionAudit;
+import io.choerodon.mybatis.domain.AuditDomain;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * <p>
@@ -41,6 +44,7 @@ import java.util.List;
 @ModifyAudit
 @Table(name = "hpfm_code_rule")
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@MultiLanguage
 public class CodeRule extends AuditDomain {
 
     public static final String RULE_ID = "ruleId";
@@ -126,6 +130,7 @@ public class CodeRule extends AuditDomain {
     @NotBlank
     @ApiModelProperty("编码规则名")
     @Length(max = 60)
+    @MultiLanguageField
     private String ruleName;
 
     @NotBlank
@@ -135,6 +140,7 @@ public class CodeRule extends AuditDomain {
 
     @NotNull
     @ApiModelProperty("租户ID")
+    @MultiLanguageField
     private Long tenantId;
 
     @ApiModelProperty("描述")

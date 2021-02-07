@@ -23,6 +23,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.validation.constraints.Max;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
@@ -156,6 +157,7 @@ public class CodeRuleDetail extends AuditDomain {
     @Length(max = 30)
     private String dateMask;
 
+    @Max(20)
     @ApiModelProperty("序列长度")
     private Long seqLength;
 

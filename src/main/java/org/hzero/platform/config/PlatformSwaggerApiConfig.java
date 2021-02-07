@@ -2,6 +2,7 @@ package org.hzero.platform.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+
 import springfox.documentation.service.Tag;
 import springfox.documentation.spring.web.plugins.Docket;
 
@@ -83,6 +84,7 @@ public class PlatformSwaggerApiConfig {
     public static final String LANGUAGE_SITE = "Language(Site Level)";
 
     public static final String LOV = "Lov";
+    public static final String LOV_PUB = "Lov Public";
     public static final String LOV_MANAGE = "Lov Manage";
     public static final String LOV_MANAGE_SITE = "Lov Manage(Site Level)";
     public static final String LOV_VIEW = "Lov View";
@@ -138,8 +140,8 @@ public class PlatformSwaggerApiConfig {
     public static final String DASHBOARD_CARD_CLAUSE_SITE = "Dashboard Card Clause(Site Level)";
 
 
-    public static final String COMMON_TEMPLATE = "Common Template";
-    public static final String COMMON_TEMPLATE_SITE = "Common Template(Site Level)";
+    public static final String CONTENT_TEMPLATE = "Content Template";
+    public static final String CONTENT_TEMPLATE_SITE = "Content Template(Site Level)";
     public static final String TEMPLATE_CONFIG = "Template Config";
     public static final String TEMPLATE_CONFIG_SITE = "Template Config(Site Level)";
     public static final String TEMPLATE_ASSIGN = "Template Assign";
@@ -154,16 +156,6 @@ public class PlatformSwaggerApiConfig {
     public static final String SERVER_CLUSTER_SITE = "Server Cluster(Site Level)";
     public static final String SERVER_ASSIGN = "Server Assign";
     public static final String SERVER_ASSIGN_SITE = "Server Assign(Site Level)";
-
-    /**
-     * API个性化
-     */
-    public static final String CUSTOMIZE_POINT = "Customize Point";
-    public static final String CUSTOMIZE_POINT_SITE = "Customize Point(Site Level)";
-    public static final String CUSTOMIZE_RULE = "Customize Rule";
-    public static final String CUSTOMIZE_RULE_SITE = "Customize Rule(Site Level)";
-    public static final String CUSTOMIZE_RANGE = "Customize Range";
-    public static final String CUSTOMIZE_RANGE_SITE = "Customize Range(Site Level)";
 
     /**
      * 表单配置相关
@@ -212,6 +204,12 @@ public class PlatformSwaggerApiConfig {
 
     public static final String TOOL_CACHE = "Tool Cache";
     public static final String TOOL_PASSWORD = "Tool Password";
+
+    /**
+     * 通用模板
+     */
+    public static final String COMMON_TEMPLATE = "Common Template";
+    public static final String COMMON_TEMPLATE_SITE = "Common Template(Site Level)";
 
     @Autowired
     public PlatformSwaggerApiConfig(Docket docket) {
@@ -269,6 +267,7 @@ public class PlatformSwaggerApiConfig {
                 new Tag(LANGUAGE_SITE, "语言(平台级)"),
 
                 new Tag(LOV, "值集"),
+                new Tag(LOV_PUB, "值集（公开API）"),
                 new Tag(LOV_MANAGE, "值集管理"),
                 new Tag(LOV_MANAGE_SITE, "值集管理(平台级)"),
                 new Tag(LOV_VIEW, "值集视图"),
@@ -319,20 +318,14 @@ public class PlatformSwaggerApiConfig {
                 new Tag(COMMON, "通用功能接口"),
 
 
-                new Tag(COMMON_TEMPLATE, "通用模板维护"),
-                new Tag(COMMON_TEMPLATE_SITE, "通用模板维护(平台级)"),
+                new Tag(CONTENT_TEMPLATE, "内容模板维护"),
+                new Tag(CONTENT_TEMPLATE_SITE, "通用模板维护(平台级)"),
                 new Tag(TEMPLATE_CONFIG, "模板配置"),
                 new Tag(TEMPLATE_CONFIG_SITE, "模板配置(平台级)"),
                 new Tag(TEMPLATE_ASSIGN, "分配模板"),
                 new Tag(TEMPLATE_ASSIGN_SITE, "分配模板(平台级)"),
 
 
-                new Tag(CUSTOMIZE_POINT, "个性化切入点"),
-                new Tag(CUSTOMIZE_POINT_SITE, "个性化切入点(平台级)"),
-                new Tag(CUSTOMIZE_RULE, "个性化规则"),
-                new Tag(CUSTOMIZE_RULE_SITE, "个性化规则(平台级)"),
-                new Tag(CUSTOMIZE_RANGE, "个性化范围"),
-                new Tag(CUSTOMIZE_RANGE_SITE, "个性化范围(平台级)"),
                 new Tag(FORM_HEADER, "表单头管理"),
                 new Tag(FORM_HEADER_SITE, "表单头管理(平台级)"),
                 new Tag(FORM_LINE, "表单行管理"),
@@ -361,7 +354,10 @@ public class PlatformSwaggerApiConfig {
                 new Tag(ONLINE_USER_SITE, "在线用户(平台级)"),
 
                 new Tag(TOOL_CACHE, "刷新缓存工具接口"),
-                new Tag(TOOL_PASSWORD, "密码加密解密相关工具")
+                new Tag(TOOL_PASSWORD, "密码加密解密相关工具"),
+
+                new Tag(COMMON_TEMPLATE, "通用模板"),
+                new Tag(COMMON_TEMPLATE_SITE, "通用模板(平台级)")
         );
     }
 }

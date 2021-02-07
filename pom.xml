@@ -7,10 +7,10 @@
     <parent>
         <groupId>org.hzero</groupId>
         <artifactId>hzero-parent</artifactId>
-        <version>1.4.0.RELEASE</version>
+        <version>1.5.4.RELEASE</version>
     </parent>
     <artifactId>hzero-platform-saas</artifactId>
-    <version>1.4.5.RELEASE</version>
+    <version>1.5.4.RELEASE</version>
 
     <dependencies>
         <!-- hzero starter -->
@@ -55,7 +55,6 @@
         <dependency>
             <groupId>org.hzero.boot</groupId>
             <artifactId>hzero-boot-platform</artifactId>
-            <version>1.4.4.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.hzero.boot</groupId>
@@ -81,11 +80,7 @@
             <groupId>org.hzero.plugin</groupId>
             <artifactId>platform-cusz-saas</artifactId>
         </dependency>
-        <!-- api 客制化 -->
-        <dependency>
-            <groupId>org.hzero.boot</groupId>
-            <artifactId>hzero-boot-api-customize</artifactId>
-        </dependency>
+
         <!-- db -->
         <dependency>
             <groupId>mysql</groupId>

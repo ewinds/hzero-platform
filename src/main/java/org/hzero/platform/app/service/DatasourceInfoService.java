@@ -1,8 +1,12 @@
 package org.hzero.platform.app.service;
 
+import java.util.List;
 import java.util.Map;
 
 import org.hzero.platform.domain.entity.Datasource;
+
+import io.choerodon.core.domain.Page;
+import io.choerodon.mybatis.pagehelper.domain.PageRequest;
 
 /**
  * 数据源配置应用服务
@@ -70,4 +74,30 @@ public interface DatasourceInfoService {
      * @param datasource 数据源参数
      */
     void generateDriverClass(Datasource datasource);
+
+    /**
+     * 分页查询数据源信息
+     *
+     * @param pageRequest 分页参数
+     * @param datasource 查询条件
+     * @param orgQueryFlag 租户查询标识
+     * @return
+     */
+    Page<Datasource> pageDatasource(PageRequest pageRequest, Datasource datasource, boolean orgQueryFlag);
+
+    /**
+     * 获取数据源信息
+     *
+     * @param datasourceId 数据源Id
+     * @return 数据源明细
+     */
+    Datasource selectDatasource(Long datasourceId);
+
+    /**
+     * 条件查询所有数据源信息
+     *
+     * @param datasource 数据源查询条件
+     * @return 查询结果
+     */
+    List<Datasource> listDatasourceByCondition(Datasource datasource);
 }

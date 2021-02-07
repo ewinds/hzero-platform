@@ -10,7 +10,6 @@ import org.hzero.mybatis.helper.SecurityTokenHelper;
 import org.hzero.platform.app.service.DatasourceInfoService;
 import org.hzero.platform.config.PlatformSwaggerApiConfig;
 import org.hzero.platform.domain.entity.Datasource;
-import org.hzero.platform.domain.repository.DatasourceRepository;
 import org.hzero.platform.domain.vo.DatasourcePoolOptionVO;
 import org.hzero.platform.infra.enums.DBPoolTypeEnum;
 import org.hzero.starter.keyencrypt.core.Encrypt;
@@ -43,9 +42,6 @@ import io.swagger.annotations.ApiOperation;
 public class DatasourceController extends BaseController {
 
     @Autowired
-    private DatasourceRepository datasourceRepository;
-
-    @Autowired
     private DatasourceInfoService datasourceInfoService;
 
     @ApiOperation(value = "数据源配置列表")
@@ -62,7 +58,7 @@ public class DatasourceController extends BaseController {
                                                            Datasource datasource,
                                                            @ApiIgnore @SortDefault(value = Datasource.FIELD_DATASOURCE_CODE) PageRequest pageRequest) {
         datasource.setTenantId(organizationId);
-        Page<Datasource> page = datasourceRepository.pageDatasource(pageRequest, datasource, true);
+        Page<Datasource> page = datasourceInfoService.pageDatasource(pageRequest, datasource, true);
         return Results.success(page);
     }
 
@@ -70,7 +66,7 @@ public class DatasourceController extends BaseController {
     @Permission(level = ResourceLevel.ORGANIZATION)
     @GetMapping("/{datasourceId}")
     public ResponseEntity<Datasource> detail(@PathVariable Long organizationId, @PathVariable @Encrypt Long datasourceId) {
-        return Results.success(datasourceRepository.selectDatasource(datasourceId));
+        return Results.success(datasourceInfoService.selectDatasource(datasourceId));
     }
 
     @ApiOperation(value = "根据编码获取数据源配置明细")

@@ -4,8 +4,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.hzero.core.jackson.annotation.EnableObjectMapper;
+import org.hzero.core.util.CommonExecutor;
 import org.hzero.platform.infra.properties.DataHierarchyProperties;
+import org.hzero.platform.infra.properties.PlatformProperties;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.openfeign.EnableFeignClients;
@@ -14,11 +16,9 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.scheduling.annotation.EnableAsync;
 
-import io.choerodon.resource.annoation.EnableChoerodonResourceServer;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import org.hzero.core.jackson.annotation.EnableObjectMapper;
-import org.hzero.core.util.CommonExecutor;
-import org.hzero.platform.infra.properties.PlatformProperties;
+import io.choerodon.resource.annoation.EnableChoerodonResourceServer;
 
 /**
  * @author bojiangzhou 2018/10/25

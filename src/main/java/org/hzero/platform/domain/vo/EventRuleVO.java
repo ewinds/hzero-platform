@@ -1,6 +1,7 @@
 package org.hzero.platform.domain.vo;
 
 import org.hzero.platform.domain.entity.EventRule;
+import org.springframework.beans.BeanUtils;
 
 /**
  * 事件规则值对象，存储到缓存
@@ -12,28 +13,20 @@ public class EventRuleVO {
     private Long eventId;
     private Integer syncFlag;
     private String callType;
+    private String ruleCode;
     private String beanName;
     private String methodName;
     private String apiUrl;
     private String apiMethod;
+    private String messageCode;
+    private String serverCode;
     private Integer orderSeq;
     private String matchingRule;
     private Integer resultFlag;
     private Integer enabledFlag;
 
     public EventRuleVO(EventRule eventRule) {
-        this.eventRuleId = eventRule.getEventRuleId();
-        this.eventId = eventRule.getEventId();
-        this.syncFlag = eventRule.getSyncFlag();
-        this.callType = eventRule.getCallType();
-        this.beanName = eventRule.getBeanName();
-        this.methodName = eventRule.getMethodName();
-        this.apiUrl = eventRule.getApiUrl();
-        this.apiMethod = eventRule.getApiMethod();
-        this.orderSeq = eventRule.getOrderSeq();
-        this.matchingRule = eventRule.getMatchingRule();
-        this.resultFlag = eventRule.getResultFlag();
-        this.enabledFlag = eventRule.getEnabledFlag();
+        BeanUtils.copyProperties(eventRule, this);
     }
 
     public Long getEventRuleId() {
@@ -68,6 +61,14 @@ public class EventRuleVO {
         this.callType = callType;
     }
 
+    public String getRuleCode() {
+        return ruleCode;
+    }
+
+    public void setRuleCode(String ruleCode) {
+        this.ruleCode = ruleCode;
+    }
+
     public String getBeanName() {
         return beanName;
     }
@@ -98,6 +99,22 @@ public class EventRuleVO {
 
     public void setApiMethod(String apiMethod) {
         this.apiMethod = apiMethod;
+    }
+
+    public String getMessageCode() {
+        return messageCode;
+    }
+
+    public void setMessageCode(String messageCode) {
+        this.messageCode = messageCode;
+    }
+
+    public String getServerCode() {
+        return serverCode;
+    }
+
+    public void setServerCode(String serverCode) {
+        this.serverCode = serverCode;
     }
 
     public Integer getOrderSeq() {
@@ -134,33 +151,22 @@ public class EventRuleVO {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("EventRuleVO [eventRuleId=");
-        builder.append(eventRuleId);
-        builder.append(", eventId=");
-        builder.append(eventId);
-        builder.append(", syncFlag=");
-        builder.append(syncFlag);
-        builder.append(", callType=");
-        builder.append(callType);
-        builder.append(", beanName=");
-        builder.append(beanName);
-        builder.append(", methodName=");
-        builder.append(methodName);
-        builder.append(", apiUrl=");
-        builder.append(apiUrl);
-        builder.append(", apiMethod=");
-        builder.append(apiMethod);
-        builder.append(", orderSeq=");
-        builder.append(orderSeq);
-        builder.append(", matchingRule=");
-        builder.append(matchingRule);
-        builder.append(", resultFlag=");
-        builder.append(resultFlag);
-        builder.append(", enabledFlag=");
-        builder.append(enabledFlag);
-        builder.append("]");
-        return builder.toString();
+        return "EventRuleVO{" +
+                "eventRuleId=" + eventRuleId +
+                ", eventId=" + eventId +
+                ", syncFlag=" + syncFlag +
+                ", callType='" + callType + '\'' +
+                ", ruleCode='" + ruleCode + '\'' +
+                ", beanName='" + beanName + '\'' +
+                ", methodName='" + methodName + '\'' +
+                ", apiUrl='" + apiUrl + '\'' +
+                ", apiMethod='" + apiMethod + '\'' +
+                ", messageCode='" + messageCode + '\'' +
+                ", serverCode='" + serverCode + '\'' +
+                ", orderSeq=" + orderSeq +
+                ", matchingRule='" + matchingRule + '\'' +
+                ", resultFlag=" + resultFlag +
+                ", enabledFlag=" + enabledFlag +
+                '}';
     }
-    
 }

@@ -16,7 +16,8 @@
             hfl.enabled_flag,
             hfl.tenant_id,
             hfl.updatable_flag,
-            hfl.value_constraint
+            hfl.value_constraint,
+            hfl.value_set
         FROM hpfm_form_line hfl
         LEFT JOIN hpfm_form_line_tl hflt ON hfl.form_line_id = hflt.form_line_id AND hflt.lang = #{lang}
         WHERE hfl.form_header_id = #{formHeaderId}

@@ -9,7 +9,6 @@ import org.hzero.mybatis.helper.SecurityTokenHelper;
 import org.hzero.platform.app.service.DatasourceInfoService;
 import org.hzero.platform.config.PlatformSwaggerApiConfig;
 import org.hzero.platform.domain.entity.Datasource;
-import org.hzero.platform.domain.repository.DatasourceRepository;
 import org.hzero.platform.domain.vo.DatasourcePoolOptionVO;
 import org.hzero.platform.infra.enums.DBPoolTypeEnum;
 import org.hzero.starter.keyencrypt.core.Encrypt;
@@ -42,9 +41,6 @@ import io.swagger.annotations.ApiOperation;
 public class DatasourceSiteController extends BaseController {
 
     @Autowired
-    private DatasourceRepository datasourceRepository;
-
-    @Autowired
     private DatasourceInfoService datasourceRelService;
 
     @ApiOperation(value = "数据源配置列表")
@@ -59,7 +55,7 @@ public class DatasourceSiteController extends BaseController {
     })
     @CustomPageRequest
     public ResponseEntity<Page<Datasource>> pageDatasource(Datasource datasource, @ApiIgnore PageRequest pageRequest) {
-        Page<Datasource> page = datasourceRepository.pageDatasource(pageRequest, datasource, false);
+        Page<Datasource> page = datasourceRelService.pageDatasource(pageRequest, datasource, false);
         return Results.success(page);
     }
 
@@ -67,7 +63,7 @@ public class DatasourceSiteController extends BaseController {
     @Permission(level = ResourceLevel.SITE)
     @GetMapping("/{datasourceId}")
     public ResponseEntity<Datasource> detail(@PathVariable @Encrypt Long datasourceId) {
-        return Results.success(datasourceRepository.selectDatasource(datasourceId));
+        return Results.success(datasourceRelService.selectDatasource(datasourceId));
     }
 
     @ApiOperation(value = "创建数据源配置")
@@ -136,6 +132,6 @@ public class DatasourceSiteController extends BaseController {
     @Permission(permissionWithin = true)
     @PostMapping("/all")
     public ResponseEntity<List<Datasource>> listDatasourceByCondition(@RequestBody(required = false) Datasource datasource) {
-        return Results.success(datasourceRepository.listDatasourceByCondition(datasource));
+        return Results.success(datasourceRelService.listDatasourceByCondition(datasource));
     }
 }

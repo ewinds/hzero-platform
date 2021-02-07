@@ -9,13 +9,15 @@
             httl.tenant_name,
             hrs.server_name,
             hrs.script_code,
-            hrs.script_description,
+            hrst.script_description,
             hrs.script_type_code,
             hrs.enabled_flag,
             hrs.category,
             hrs.object_version_number
         FROM
             hpfm_rule_script hrs
+        left join hpfm_rule_script_tl hrst on hrst.rule_script_id = hrs.rule_script_id
+        and hrst.lang = #{lang}
         join hpfm_tenant ht on ht.tenant_id = hrs.tenant_id
         LEFT JOIN hpfm_tenant_tl httl ON ht.tenant_id = httl.tenant_id AND httl.lang = #{lang}
         WHERE
@@ -32,7 +34,7 @@
         </if>
         <if test="scriptDescription != null and scriptDescription != ''">
             <bind name="scriptDescriptionLike" value="'%' + scriptDescription + '%'"/>
-            AND hrs.script_description LIKE #{scriptDescriptionLike}
+            AND hrst.script_description LIKE #{scriptDescriptionLike}
         </if>
         <if test="scriptTypeCode != null and scriptTypeCode != ''">
             AND hrs.script_type_code = #{scriptTypeCode}
@@ -52,7 +54,7 @@
             httl.tenant_name,
             hrs.server_name,
             hrs.script_code,
-            hrs.script_description,
+            hrst.script_description,
             hrs.script_type_code,
             hrs.script_content,
             hrs.tenant_id,
@@ -61,6 +63,8 @@
             hrs.object_version_number
         FROM
             hpfm_rule_script hrs
+        left join hpfm_rule_script_tl hrst on hrst.rule_script_id = hrs.rule_script_id
+        and hrst.lang = #{lang}
         join hpfm_tenant ht on ht.tenant_id = hrs.tenant_id
         LEFT JOIN hpfm_tenant_tl httl ON ht.tenant_id = httl.tenant_id AND httl.lang = #{lang}
         WHERE

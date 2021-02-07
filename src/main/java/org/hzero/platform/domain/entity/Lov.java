@@ -21,7 +21,6 @@ import org.hzero.core.base.BaseConstants;
 import org.hzero.core.message.MessageAccessor;
 import org.hzero.core.util.Regexs;
 import org.hzero.platform.domain.repository.LovRepository;
-import org.hzero.platform.domain.repository.LovValueRepository;
 import org.hzero.platform.infra.constant.Constants;
 import org.hzero.platform.infra.constant.FndConstants;
 import org.hzero.platform.infra.constant.HpfmMsgCodeConstants;
@@ -120,21 +119,6 @@ public class Lov extends AuditDomain {
                 routeName = routeName.substring(1, routeName.length() - 3);
             }
         }
-    }
-
-    /**
-     * 值集表级联删除
-     *
-     * @return
-     */
-    public int cascadeDelete(LovRepository lovRepository, LovValueRepository lovValueRepository) {
-        Assert.notNull(this.lovId, BaseConstants.ErrorCode.ERROR);
-        Assert.notNull(this.getObjectVersionNumber(), BaseConstants.ErrorCode.OPTIMISTIC_LOCK);
-        lovValueRepository.deleteByLovId(this.lovId);
-        Lov lovDeleteParam = new Lov();
-        lovDeleteParam.lovId = this.lovId;
-        lovDeleteParam.setObjectVersionNumber(this.getObjectVersionNumber());
-        return lovRepository.deleteByPrimaryKey(lovDeleteParam);
     }
 
     /**
@@ -238,7 +222,7 @@ public class Lov extends AuditDomain {
     @ApiModelProperty("租户ID")
     @MultiLanguageField
     private Long tenantId;
-    @Size(max = 30)
+    @Size(max = 60)
     @Pattern(regexp = Regexs.CODE_UPPER)
     @ApiModelProperty("父值集代码")
     private String parentLovCode;

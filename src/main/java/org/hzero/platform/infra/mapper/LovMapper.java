@@ -3,6 +3,7 @@ package org.hzero.platform.infra.mapper;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Param;
+import org.hzero.platform.api.dto.LovAggregateDTO;
 import org.hzero.platform.domain.entity.Lov;
 
 import io.choerodon.mybatis.common.BaseMapper;
@@ -51,4 +52,25 @@ public interface LovMapper extends BaseMapper<Lov> {
      * @return Lov
      */
     Lov selectLovHeaderByCodeAndTenant(@Param("lovCode") String lovCode, @Param("tenantId") Long tenantId);
+
+    /**
+     * 通过视图编码和租户Id获取关联的值集信息
+     *
+     * @param viewCode 视图编码
+     * @param tenantId 租户Id
+     * @return 关联值集信息
+     */
+    Lov selectLovByViewCodeAndTenant(@Param("viewCode") String viewCode, @Param("tenantId") Long tenantId);
+
+    /**
+     * 聚合获取值集头行数据
+     *
+     * @param lovCode   值集编码
+     * @param tenantId  租户Id
+     * @param lang      语言
+     * @param tag       标记，仅独立值集可作为查询条件
+     * @return 值集头行聚合结果
+     */
+    LovAggregateDTO selectLovAggregateLovValues(@Param("lovCode") String lovCode, @Param("tenantId") Long tenantId,
+            @Param("lang") String lang, @Param("tag") String tag);
 }

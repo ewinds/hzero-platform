@@ -1,17 +1,18 @@
 package org.hzero.platform.domain.entity;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.validation.constraints.Pattern;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.choerodon.core.exception.CommonException;
+import io.choerodon.mybatis.annotation.ModifyAudit;
+import io.choerodon.mybatis.annotation.MultiLanguage;
+import io.choerodon.mybatis.annotation.MultiLanguageField;
+import io.choerodon.mybatis.annotation.VersionAudit;
+import io.choerodon.mybatis.domain.AuditDomain;
+import io.swagger.annotations.ApiModel;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.validator.constraints.Length;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.core.redis.RedisHelper;
 import org.hzero.core.util.Regexs;
@@ -24,16 +25,15 @@ import org.hzero.platform.infra.constant.FndConstants;
 import org.hzero.platform.infra.constant.HpfmMsgCodeConstants;
 import org.hzero.starter.keyencrypt.core.Encrypt;
 import org.springframework.util.Assert;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.choerodon.core.exception.CommonException;
-import io.choerodon.mybatis.annotation.ModifyAudit;
-import io.choerodon.mybatis.annotation.VersionAudit;
-import io.choerodon.mybatis.domain.AuditDomain;
-import io.swagger.annotations.ApiModel;
 import springfox.documentation.annotations.ApiIgnore;
+
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.validation.constraints.Pattern;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 事件，每个事件拥有唯一编码，通过编码触发事件。如果禁用该事件，则事件下的所有规则都默认失效.
@@ -43,6 +43,7 @@ import springfox.documentation.annotations.ApiIgnore;
 @ApiModel
 @VersionAudit
 @ModifyAudit
+@MultiLanguage
 @Table(name = "hpfm_event")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Event extends AuditDomain {
@@ -143,12 +144,16 @@ public class Event extends AuditDomain {
     @Encrypt
     private Long eventId;
     @Pattern(regexp = Regexs.CODE_UPPER)
+    @Length(max = 30)
     @Where
     private String eventCode;
     private Integer enabledFlag;
+    @Length(max = 80)
+    @MultiLanguageField
     private String eventDescription;
     private Long objectVersionNumber;
     @Where
+    @MultiLanguageField
     private Long tenantId;
     @Transient
     private List<EventRule> ruleList;

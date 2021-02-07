@@ -3,6 +3,7 @@ package org.hzero.platform.api.controller.v1;
 import java.util.List;
 
 import org.hzero.boot.platform.lov.annotation.ProcessLovValue;
+import org.hzero.boot.platform.lov.dto.LovValueDTO;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.core.base.BaseController;
 import org.hzero.core.util.Results;
@@ -119,6 +120,19 @@ public class FormLineController extends BaseController {
     @GetMapping("/header-id")
     public ResponseEntity<List<FormLine>> listFormLineByHeaderId(@RequestParam @Encrypt Long formHeaderId, @PathVariable("organizationId") Long tenantId) {
         return Results.success(formLineService.listFormLineByHeaderId(formHeaderId, tenantId));
+    }
+
+    @ApiOperation(value = "翻译值集/值集视图类型的字段内容")
+    @Permission(permissionLogin = true)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "organizationId", value = "租户Id", paramType = "path", required = true),
+            @ApiImplicitParam(name = "valueSet", value = "值集/值集视图编码", paramType = "path", required = true),
+            @ApiImplicitParam(name = "params", value = "查询参数", paramType = "query", required = true)
+    })
+    @GetMapping("/translate-lov/{formLineId}")
+    public ResponseEntity<List<LovValueDTO>> translateValueSet(@PathVariable("organizationId") Long organizationId,
+            @PathVariable("formLineId") @Encrypt Long formLineId, @RequestParam(required = false) List<String> params) {
+        return Results.success(formLineService.translateValueSet(organizationId, formLineId, params));
     }
 
 }

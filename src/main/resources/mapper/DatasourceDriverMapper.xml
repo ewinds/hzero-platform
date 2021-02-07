@@ -5,7 +5,7 @@
         <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()" />
         select
           hdd.driver_id,
-          hdd.driver_name,
+          hddtl.driver_name,
           hdd.description,
           hdd.database_type,
           hdd.driver_version,
@@ -15,15 +15,16 @@
           hdd.tenant_id,
           htt.tenant_name
         from hpfm_datasource_driver hdd
+        JOIN hpfm_datasource_driver_tl hddtl ON hddtl.driver_id = hdd.driver_id AND hddtl.lang = #{lang}
         join hpfm_tenant ht on ht.tenant_id = hdd.tenant_id
-        left join hpfm_tenant_tl htt on ht.tenant_id = htt.tenant_id and htt.lang = #{lang}
+        join hpfm_tenant_tl htt on ht.tenant_id = htt.tenant_id and htt.lang = #{lang}
           <where>
               <if test="tenantId != null">
                   AND hdd.tenant_id IN (#{tenantId}<if test="orgQueryFlag">, 0</if>)
               </if>
               <if test="driverName != null and driverName != ''">
               <bind name="driverNameLike" value="'%'+driverName+'%'" />
-                  and hdd.driver_name like #{driverNameLike}
+                  and hddtl.driver_name like #{driverNameLike}
               </if>
               <if test="description != null and description != ''">
               <bind name="descriptionLike" value="'%'+description+'%'" />

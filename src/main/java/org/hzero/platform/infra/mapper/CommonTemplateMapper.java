@@ -1,33 +1,33 @@
 package org.hzero.platform.infra.mapper;
 
-import org.apache.ibatis.annotations.Param;
-import org.hzero.platform.domain.entity.CommonTemplate;
-
 import io.choerodon.mybatis.common.BaseMapper;
+import org.apache.ibatis.annotations.Param;
+import org.hzero.platform.api.dto.commontemplate.CommonTemplateDTO;
+import org.hzero.platform.api.dto.commontemplate.CommonTemplateQueryDTO;
+import org.hzero.platform.domain.entity.CommonTemplate;
 
 import java.util.List;
 
 /**
  * 通用模板Mapper
  *
- * @author yunxiang.zhou01@hand-china.com 2018-08-13 15:37:15
+ * @author bo.he02@hand-china.com 2020-08-04 09:49:14
  */
 public interface CommonTemplateMapper extends BaseMapper<CommonTemplate> {
+    /**
+     * 按照查询条件查询通用模板数据
+     *
+     * @param queryDTO 查询参数对象
+     * @return 查询结果信息
+     */
+    List<CommonTemplateDTO> list(CommonTemplateQueryDTO queryDTO);
 
     /**
-     * 查询模板
+     * 查询通用模板的数据
      *
-     * @param templates 模板条件
-     * @return 模板list
+     * @param organizationId 租户ID
+     * @param templateId     通用模板主键
+     * @return 通用模板数据
      */
-    List<CommonTemplate> selectTemplates(CommonTemplate templates);
-
-    /**
-     * 使用租户Id和模板编码查询唯一模板
-     *
-     * @param templateCode 模板编码
-     * @param tenantId 租户Id
-     * @return 唯一模板
-     */
-    int selectTemplateByTenantAndCode(@Param("templateCode") String templateCode, @Param("tenantId") Long tenantId);
+    CommonTemplateDTO detail(@Param("organizationId") Long organizationId, @Param("templateId") Long templateId);
 }

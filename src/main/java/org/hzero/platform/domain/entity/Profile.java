@@ -8,6 +8,8 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.choerodon.mybatis.annotation.ModifyAudit;
+import io.choerodon.mybatis.annotation.MultiLanguage;
+import io.choerodon.mybatis.annotation.MultiLanguageField;
 import io.choerodon.mybatis.annotation.VersionAudit;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -27,6 +29,7 @@ import org.springframework.util.Assert;
  */
 @VersionAudit
 @ModifyAudit
+@MultiLanguage
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Table(name = "hpfm_profile")
 @ApiModel("配置维护")
@@ -113,6 +116,7 @@ public class Profile extends AuditDomain {
 
     @ApiModelProperty("描述")
     @Length(max = 240)
+    @MultiLanguageField
     private String description;
 
     @NotBlank
@@ -121,6 +125,7 @@ public class Profile extends AuditDomain {
     private String profileLevel;
 
     @ApiModelProperty("租户ID")
+    @MultiLanguageField
     private Long tenantId;
 
     @ApiModelProperty("版本号")

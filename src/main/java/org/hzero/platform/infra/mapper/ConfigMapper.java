@@ -2,8 +2,11 @@ package org.hzero.platform.infra.mapper;
 
 import java.util.List;
 
-import io.choerodon.mybatis.common.BaseMapper;
+import org.apache.ibatis.annotations.Param;
 import org.hzero.platform.domain.entity.Config;
+import org.hzero.platform.domain.vo.TitleConfigCacheVO;
+
+import io.choerodon.mybatis.common.BaseMapper;
 
 /**
  * <p>
@@ -21,4 +24,12 @@ public interface ConfigMapper extends BaseMapper<Config> {
      * @return 系统配置list
      */
     List<Config> selectConfigByTenantId(Long tenantId);
+
+    /**
+     * 查询config多语言Map值
+     *
+     * @param configId 查询条件
+     * @return 查询结果
+     */
+    List<TitleConfigCacheVO> selectLanguageValueMap(@Param("configId") Long configId);
 }

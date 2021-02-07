@@ -2,13 +2,11 @@ package org.hzero.platform.api.dto;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.annotations.ApiModelProperty;
 import org.hzero.platform.domain.entity.AuditLogin;
 import org.hzero.starter.keyencrypt.core.Encrypt;
-import org.hzero.websocket.vo.UserVO;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-import io.swagger.annotations.ApiModelProperty;
+import org.hzero.websocket.vo.SessionVO;
 
 /**
  * 在线用户
@@ -49,7 +47,7 @@ public class OnLineUserDTO {
     @ApiModelProperty("在线时长")
     private Long duration;
 
-    public OnLineUserDTO setUser(UserVO userVO) {
+    public OnLineUserDTO setUser(SessionVO userVO) {
         this.tenantId = userVO.getTenantId();
         this.roleId = userVO.getRoleId();
         this.accessToken = userVO.getAccessToken();

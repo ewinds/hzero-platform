@@ -260,4 +260,14 @@ public class HpfmMsgCodeConstants {
      * 值集错误：导入值集时不允许更新LovType内容
      */
     public static final String ERROR_LOV_TYPE_NOT_MATCH = "hpfm.error.lovTypeNotMatch";
+    /**
+     * 值集错误，当前值集存在父级值集，不可删除
+     */
+    public static final String ERROR_PARENT_LOV_NOT_DELETE = "hpfm.error.parentLovNotDelete";
+    /**
+     * 值集错误，当前值集被值集视图引用，不可删除
+     */
+    public static final String ERROR_LOV_REFERENCED_WITH_LOV_VIEW = "hpfm.error.lovReferencedWithLovView";
+    public static final String ERROR_ENABLED_LOV_NOT_DELETE = "hpfm.error.enabledLovNotDelete";
+    public static final String ERROR_ENABLED_LOV_VIEW_NOT_DELETE = "hpfm.error.enabledLovViewNotDelete";
 }

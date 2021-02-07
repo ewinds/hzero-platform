@@ -1,10 +1,16 @@
 package org.hzero.platform.domain.service;
 
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.core.redis.RedisHelper;
 import org.hzero.platform.domain.entity.Config;
+import org.hzero.platform.infra.constant.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import io.choerodon.mybatis.helper.LanguageHelper;
 
 /**
  * <p>
@@ -26,10 +32,23 @@ public class ConfigDomainService {
      * @param configCode 配置code
      * @return 配置值
      */
+    @SuppressWarnings("unchecked")
     public String getConfigValue(Long tenantId, String configCode) {
         String key = Config.generateCacheKey(configCode, tenantId);
-        String value = redisHelper.strGet(key);
-        return value == null ? redisHelper.strGet(Config.generateCacheKey(configCode, BaseConstants.DEFAULT_TENANT_ID))
-                        : value;
+        String value =  redisHelper.strGet(key) == null ? redisHelper.strGet(Config.generateCacheKey(configCode, BaseConstants.DEFAULT_TENANT_ID))
+                : redisHelper.strGet(key);
+        if (!Constants.CONFIG_CODE_TITLE.equals(configCode)) {
+            return value;
+        } else {
+            if (StringUtils.isBlank(value)) {
+                return value;
+            } else {
+                Map<String, String> resultMap =
+                        (Map<String, String>) redisHelper.fromJson(value, Map.class);
+                String language = LanguageHelper.language();
+                return resultMap.get(language);
+            }
+        }
+
     }
 }

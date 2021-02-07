@@ -24,6 +24,32 @@
         <result property="tenantName" column="tenant_name" jdbcType="VARCHAR"/>
     </resultMap>
 
+    <resultMap id="lovAggregateValuesMap" type="org.hzero.platform.api.dto.LovAggregateDTO">
+        <result property="lovCode" column="lov_code" jdbcType="VARCHAR"/>
+        <result property="lovTypeCode" column="lov_type_code" jdbcType="VARCHAR"/>
+        <result property="routeName" column="route_name" jdbcType="VARCHAR"/>
+        <result property="lovName" column="lov_name" jdbcType="VARCHAR"/>
+        <result property="description" column="description" jdbcType="VARCHAR"/>
+        <result property="tenantId" column="tenant_id" jdbcType="DECIMAL"/>
+        <result property="parentLovCode" column="parent_lov_code" jdbcType="VARCHAR"/>
+        <result property="parentTenantId" column="parent_tenant_id" jdbcType="DECIMAL"/>
+        <result property="customUrl" column="custom_url" jdbcType="VARCHAR"/>
+        <result property="valueField" column="value_field" jdbcType="VARCHAR"/>
+        <result property="displayField" column="display_field" jdbcType="VARCHAR"/>
+        <result property="encryptField" column="encrypt_field" jdbcType="VARCHAR"/>
+        <result property="mustPageFlag" column="must_page_flag" jdbcType="DECIMAL"/>
+        <result property="enabledFlag" column="enabled_flag" jdbcType="DECIMAL"/>
+        <result property="translationSql" column="translation_sql" jdbcType="VARCHAR"/>
+        <result property="publicFlag" column="public_flag" jdbcType="DECIMAL"/>
+        <collection property="lovValues" ofType="org.hzero.platform.domain.entity.LovValue">
+            <result property="value" column="value" jdbcType="VARCHAR"/>
+            <result property="meaning" column="meaning" jdbcType="VARCHAR"/>
+            <result property="tag" column="tag" jdbcType="VARCHAR"/>
+            <result property="orderSeq" column="order_seq" jdbcType="DECIMAL"/>
+            <result property="parentValue" column="parent_value" jdbcType="VARCHAR"/>
+        </collection>
+    </resultMap>
+
     <select id="selectLovHeaders" parameterType="org.hzero.platform.domain.entity.Lov" resultMap="BaseResultMap">
         <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()" />
         SELECT
@@ -279,6 +305,56 @@
         JOIN hpfm_lov_tl lt ON lt.lov_id = l.lov_id AND lt.lang = #{lang}
         WHERE l.lov_code = #{lovCode}
         AND l.tenant_id = #{tenantId}
+    </select>
+    <select id="selectLovByViewCodeAndTenant" resultType="org.hzero.platform.domain.entity.Lov">
+        SELECT
+            hl.lov_code,
+            hl.tenant_id
+        FROM
+            hpfm_lov hl
+        WHERE EXISTS (
+              SELECT 1
+              FROM hpfm_lov_view_header hlvh
+              WHERE hlvh.lov_id = hl.lov_id
+              AND hlvh.view_code = #{viewCode}
+              AND hlvh.tenant_id = #{tenantId}
+          )
+    </select>
+    <select id="selectLovAggregateLovValues" resultMap="lovAggregateValuesMap">
+          SELECT
+                 l.lov_code
+                ,l.lov_type_code
+                ,l.route_name
+                ,lt.lov_name
+                ,lt.description
+                ,l.tenant_id
+                ,l.parent_lov_code
+                ,l.parent_tenant_id
+                ,l.custom_url
+                ,l.value_field
+                ,l.display_field
+                ,l.encrypt_field
+                ,l.must_page_flag
+                ,l.enabled_flag
+                ,l.translation_sql
+                ,l.public_flag
+                ,hlv.lov_value_id
+                ,hlv.value
+                ,hlvt.meaning
+                ,hlv.tag
+                ,hlv.order_seq
+                ,hlv.parent_value
+                ,hlv.enabled_flag
+            FROM
+                hpfm_lov l
+            JOIN hpfm_lov_tl lt ON lt.lov_id = l.lov_id AND lt.lang = #{lang}
+            LEFT JOIN hpfm_lov_value hlv ON hlv.lov_id = l.lov_id
+            LEFT JOIN hpfm_lov_value_tl hlvt ON hlvt.lov_value_id = hlv.lov_value_id AND hlvt.lang = #{lang}
+            WHERE l.lov_code = #{lovCode}
+            AND l.tenant_id = #{tenantId}
+            <if test="tag != null and tag != ''">
+                AND hlv.tag = #{tag}
+            </if>
     </select>
 
 </mapper>

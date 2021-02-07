@@ -28,6 +28,8 @@ public interface Constants {
 
     String CONFIG_CODE_FAVICON = "FAVICON";
 
+    String CONFIG_CODE_TITLE = "TITLE";
+
     /**
      * 默认平台管理员角色
      */
@@ -126,7 +128,7 @@ public interface Constants {
         /**
          * 数据库类型-Hana
          */
-            String DB_HANA = "HANA";
+        String DB_HANA = "HANA";
 
         /**
          * 数据库JDBC驱动
@@ -323,6 +325,13 @@ public interface Constants {
          * 初始在线人数
          */
         Long INITIAL_ONLINE = 0L;
+    }
+
+    interface FormLineItemTypeCode {
+        String TEXT = "TEXT";
+        String PASSWORD = "PASSWORD";
+        String LOV = "LOV";
+        String LOV_VIEW = "LOV_VIEW";
     }
 
 }

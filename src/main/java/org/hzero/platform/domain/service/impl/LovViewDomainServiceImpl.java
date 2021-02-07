@@ -1,13 +1,16 @@
 package org.hzero.platform.domain.service.impl;
 
-import io.choerodon.core.exception.CommonException;
-import io.choerodon.core.oauth.DetailsHelper;
+import java.util.List;
+import java.util.Objects;
+
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hzero.common.HZeroCacheKey;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.core.helper.LanguageHelper;
 import org.hzero.core.redis.RedisHelper;
 import org.hzero.mybatis.common.Criteria;
+import org.hzero.platform.domain.entity.Lov;
 import org.hzero.platform.domain.entity.LovViewHeader;
 import org.hzero.platform.domain.entity.LovViewLine;
 import org.hzero.platform.domain.repository.LovRepository;
@@ -15,6 +18,7 @@ import org.hzero.platform.domain.repository.LovViewHeaderRepository;
 import org.hzero.platform.domain.repository.LovViewLineRepository;
 import org.hzero.platform.domain.service.LovViewDomainService;
 import org.hzero.platform.domain.vo.LovViewVO;
+import org.hzero.platform.infra.constant.FndConstants;
 import org.hzero.platform.infra.constant.HpfmMsgCodeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +27,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import java.util.List;
-import java.util.Objects;
+import io.choerodon.core.exception.CommonException;
+import io.choerodon.core.oauth.DetailsHelper;
 
 /**
  * 值集视图逻辑统一处理Service实现类
@@ -44,15 +48,20 @@ public class LovViewDomainServiceImpl implements LovViewDomainService {
     private LovRepository lovRepository;
 
     private Logger logger = LoggerFactory.getLogger(LovViewDomainServiceImpl.class);
+    /*获取SQL值集值公共API*/
+    private static final String PUBLIC_QUERY_SQL_URL = "/v1/pub/lovs/sql/data";
+    private static final String PUBLIC_ORG_QUERY_SQL_URL = "/v1/pub/{organizationId}/lovs/sql/data";
 
     @Override
-    public LovViewVO queryLovViewInfo(String viewCode, Long tenantId) {
+    public LovViewVO queryLovViewInfo(String viewCode, Long tenantId, String lang, boolean onlyPublic) {
         LovViewVO bestMatch;
         List<LovViewVO> cacheResults;
         if (tenantId == null) {
             tenantId = BaseConstants.DEFAULT_TENANT_ID;
         }
-        String lang = LanguageHelper.language();
+        if (StringUtils.isBlank(lang)) {
+            lang = LanguageHelper.language();
+        }
         // 先从租户级缓存中查询
         cacheResults = this.lovViewHeaderRepository.queryLovViewDTOFromCacheByTenant(viewCode, tenantId, lang);
         bestMatch = cacheResults.get(cacheResults.size() - 1);
@@ -81,7 +90,20 @@ public class LovViewDomainServiceImpl implements LovViewDomainService {
             }
         }
         lovViewHeaderRepository.refreshCacheExpire(viewCode, tenantId, lang);
-        return bestMatch.getAccessStatus() == LovViewVO.LovViewAccessStatus.ACCESS ? bestMatch : null;
+        bestMatch = bestMatch.getAccessStatus() == LovViewVO.LovViewAccessStatus.ACCESS ? bestMatch : null;
+        if (bestMatch != null && onlyPublic && FndConstants.LovTypeCode.SQL.equals(bestMatch.getLovTypeCode())) {
+            // 将queryUrl替换为 public API
+            Lov dbLov = lovRepository.selectOne(new Lov().setTenantId(bestMatch.getTenantId()).setLovCode(bestMatch.getLovCode()));
+            if (dbLov == null) {
+                dbLov = lovRepository.selectOne(new Lov().setTenantId(BaseConstants.DEFAULT_TENANT_ID).setLovCode(bestMatch.getLovCode()));
+            }
+            if (BaseConstants.DEFAULT_TENANT_ID.equals(bestMatch.getTenantId())) {
+                bestMatch.setQueryUrl(StringUtils.join("/", dbLov.getRouteName(), PUBLIC_QUERY_SQL_URL));
+            } else {
+                bestMatch.setQueryUrl(StringUtils.join("/", dbLov.getRouteName(), PUBLIC_ORG_QUERY_SQL_URL));
+            }
+        }
+        return bestMatch;
     }
 
     @Override
@@ -148,6 +170,16 @@ public class LovViewDomainServiceImpl implements LovViewDomainService {
         lovViewHeader.setTenantId(tenantId);
         lovViewHeader.setViewHeaderId(null);
         this.copyDuplicateLovView(lovViewHeader, viewHeaderId, tenantId);
+    }
+
+    @Override
+    public void deleteLovViewHeader(LovViewHeader lovViewHeader) {
+        // 判断值集视图是否为启用状态，启用状态的数据不允许删除
+        LovViewHeader viewHeader = lovViewHeaderRepository.selectByPrimaryKey(lovViewHeader.getViewHeaderId());
+        if (BaseConstants.Flag.YES.equals(viewHeader.getEnabledFlag())) {
+            throw new CommonException(HpfmMsgCodeConstants.ERROR_ENABLED_LOV_VIEW_NOT_DELETE);
+        }
+        viewHeader.cascadeDelete(lovViewHeaderRepository);
     }
 
     //-------------------------------------------私有方法-----------------------------------------------

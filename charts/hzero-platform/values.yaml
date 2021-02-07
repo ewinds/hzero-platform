@@ -74,6 +74,8 @@ env:
     RIBBON_CONNECT_TIMEOUT: 3000
     # 是否开启SQL类型LOV
     HZERO_LOV_SQL_ENABLED: true
+    # 是否开启SQL类型LOV 公开权限 API
+    HZERO_LOV_SQL_PUBLIC_API_ENABLED: false
     # 是否开启LOV值翻译
     HZERO_LOV_VALUE_ENABLED: true
     # 是否启动初始化缓存

@@ -1,14 +1,14 @@
 package org.hzero.platform.app.service.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hzero.boot.platform.encrypt.EncryptClient;
+import org.hzero.boot.platform.form.FormClient;
+import org.hzero.boot.platform.lov.adapter.LovAdapter;
 import org.hzero.core.base.BaseConstants;
 import org.hzero.core.redis.RedisHelper;
 import org.hzero.mybatis.domian.Condition;
@@ -18,10 +18,8 @@ import org.hzero.mybatis.util.Sqls;
 import org.hzero.platform.app.service.DatasourceInfoService;
 import org.hzero.platform.domain.entity.Datasource;
 import org.hzero.platform.domain.entity.DatasourceDriver;
-import org.hzero.platform.domain.entity.DatasourceService;
 import org.hzero.platform.domain.repository.DatasourceDriverRepository;
 import org.hzero.platform.domain.repository.DatasourceRepository;
-import org.hzero.platform.domain.repository.DatasourceServiceRepository;
 import org.hzero.platform.domain.service.datasource.DsExtendEntrance;
 import org.hzero.platform.infra.constant.Constants;
 import org.hzero.platform.infra.constant.HpfmMsgCodeConstants;
@@ -36,6 +34,9 @@ import org.springframework.util.Assert;
 
 import com.google.common.collect.Maps;
 
+import io.choerodon.core.domain.Page;
+import io.choerodon.mybatis.pagehelper.domain.PageRequest;
+
 /**
  * 数据源配置应用服务默认实现
  *
@@ -45,25 +46,26 @@ import com.google.common.collect.Maps;
 public class DatasourceInfoServiceImpl implements DatasourceInfoService {
 
     private DatasourceRepository dsRepository;
-    private DatasourceServiceRepository dsServiceRepository;
     private DatasourceMapper dsMapper;
     private RedisHelper redisHelper;
     private EncryptClient encryptClient;
     private DsExtendEntrance dsEventPublish;
     private DatasourceDriverRepository driverRepository;
+    private LovAdapter lovAdapter;
+    private FormClient formClient;
 
     @Autowired
-    public DatasourceInfoServiceImpl(DatasourceRepository dsRepository, DatasourceServiceRepository dsServiceRepository,
-            DatasourceMapper dsMapper, RedisHelper redisHelper, EncryptClient encryptClient,
-            DsExtendEntrance dsEventPublish, DatasourceDriverRepository driverRepository) {
+    public DatasourceInfoServiceImpl(DatasourceRepository dsRepository, DatasourceMapper dsMapper,
+            RedisHelper redisHelper, EncryptClient encryptClient, DsExtendEntrance dsEventPublish,
+            DatasourceDriverRepository driverRepository, LovAdapter lovAdapter, FormClient formClient) {
         this.dsRepository = dsRepository;
-        this.dsServiceRepository = dsServiceRepository;
         this.dsMapper = dsMapper;
         this.redisHelper = redisHelper;
         this.encryptClient = encryptClient;
-
         this.dsEventPublish = dsEventPublish;
         this.driverRepository = driverRepository;
+        this.lovAdapter = lovAdapter;
+        this.formClient = formClient;
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DatasourceInfoServiceImpl.class);
@@ -77,10 +79,10 @@ public class DatasourceInfoServiceImpl implements DatasourceInfoService {
             datasource.setTenantId(tenantId);
             datasource.setDatasourceCode(datasourceCode);
             datasource.setDsPurposeCode(dsPurposeCode);
-            datasource.refreshCache(dsServiceRepository, redisHelper);
+            datasource.refreshCache(redisHelper);
             return null;
         } else {
-            datasource.refreshCache(dsServiceRepository, redisHelper);
+            datasource.refreshCache(redisHelper);
             return datasource;
         }
     }
@@ -100,7 +102,7 @@ public class DatasourceInfoServiceImpl implements DatasourceInfoService {
             datasource.setPasswordEncrypted(tempDecryptPassword);
         }
         dsRepository.insertSelective(datasource);
-        datasource.refreshCache(dsServiceRepository, redisHelper);
+        datasource.refreshCache(redisHelper);
         // 自定义驱动需发布创建数据源事件消息,需传递明文数据源密码以及数据源驱动信息
         if (Constants.Datasource.CUSTOMIZE.equals(datasource.getDriverType())) {
             DatasourceDriver datasourceDriver = driverRepository.selectByPrimaryKey(datasource.getDriverId());
@@ -141,10 +143,10 @@ public class DatasourceInfoServiceImpl implements DatasourceInfoService {
                             Datasource.FIELD_DRIVER_CLASS, Datasource.FIELD_DRIVER_ID,
                             Datasource.FIELD_PASSWORD_ENCRYPTED);
         }
-        datasource.clearCacheAllByDatasourceId(redisHelper, dsServiceRepository, datasource.getDatasourceId());
+        datasource.clearCache(redisHelper);
         Datasource entity = dsRepository.selectByPrimaryKey(datasource.getDatasourceId());
         // 刷新缓存
-        entity.refreshCache(dsServiceRepository, redisHelper);
+        entity.refreshCache(redisHelper);
         if (Constants.Datasource.CUSTOMIZE.equals(datasource.getDriverType())) {
             DatasourceDriver datasourceDriver = driverRepository.selectByPrimaryKey(datasource.getDriverId());
             datasource.setPasswordEncrypted(tempDecryptPassword);
@@ -159,20 +161,8 @@ public class DatasourceInfoServiceImpl implements DatasourceInfoService {
     public void removeDatasourceById(Long datasourceId) {
         Datasource datasource = dsRepository.selectByPrimaryKey(datasourceId);
         Assert.notNull(datasource, BaseConstants.ErrorCode.DATA_NOT_EXISTS);
-        if (Constants.Datasource.DATA_SOURCE_PURPOSE_DT.equals(datasource.getDsPurposeCode())) {
-            // 获取datasourceId 对应的 serviceName列表
-            List<DatasourceService> datasourceServices =
-                            dsServiceRepository.select(DatasourceService.FIELD_DATASOURCE_ID, datasourceId);
-            List<String> serviceNames = datasourceServices.stream().map(DatasourceService::getServiceName)
-                            .collect(Collectors.toList());
-            // 删除数据源及依赖该数据源的服务信息
-            dsMapper.deleteByDatasourceId(datasourceId);
-            datasource.clearCacheByServiceNames(redisHelper, serviceNames);
-        } else {
-            // 暂时先删除当前数据源
-            dsMapper.deleteByPrimaryKey(datasourceId);
-            datasource.clearCacheByServiceNames(redisHelper, new ArrayList<>());
-        }
+        dsMapper.deleteByPrimaryKey(datasourceId);
+        datasource.clearCache(redisHelper);
 
         if (Constants.Datasource.CUSTOMIZE.equals(datasource.getDriverType())) {
             decryptPassword(datasource);
@@ -262,40 +252,72 @@ public class DatasourceInfoServiceImpl implements DatasourceInfoService {
     }
 
     @Override
+    public Page<Datasource> pageDatasource(PageRequest pageRequest, Datasource datasource, boolean orgQueryFlag) {
+        Page<Datasource> datasources = dsRepository.pageDatasource(pageRequest, datasource, orgQueryFlag);
+        datasources.getContent().forEach(this::convertDsPurposeCodeToMeaning);
+        return datasources;
+    }
+
+    @Override
+    public Datasource selectDatasource(Long datasourceId) {
+        Datasource datasource = dsRepository.selectDatasource(datasourceId);
+        this.convertDsPurposeCodeToMeaning(datasource);
+        if (datasource.getExtConfig() != null) {
+            // 翻译扩展表单行数据
+            datasource.setExtConfig(formClient.translateAndProcessFormLineData(datasource.getDbType(), datasource.getTenantId(), datasource.getExtConfig()));
+        }
+        return datasource;
+    }
+
+    @Override
+    public List<Datasource> listDatasourceByCondition(Datasource datasource) {
+        return dsRepository.listDatasourceByCondition(datasource);
+    }
+
+    @Override
     public void initAllData() {
         try {
             SecurityTokenHelper.close();
             List<Datasource> datasources = dsRepository.selectByCondition(Condition.builder(Datasource.class)
                             .andWhere(Sqls.custom()
-                                            .andNotEqualTo(Datasource.FIELD_DS_PURPOSE_CODE,
-                                                            Constants.Datasource.DATA_SOURCE_PURPOSE_DT)
-                                            .andEqualTo(Datasource.FIELD_ENABLED_FLAG, BaseConstants.Flag.YES))
+                                    .andEqualTo(Datasource.FIELD_ENABLED_FLAG, BaseConstants.Flag.YES))
                             .build());
             SecurityTokenHelper.close();
-            List<DatasourceService> datasourceServices = dsServiceRepository.selectAll();
             if (CollectionUtils.isNotEmpty(datasources)) {
-                // 添加非数据分发数据源缓存
-                datasources.forEach(ds -> Datasource.pushRedis(ds, redisHelper, null));
-            }
-
-            if (CollectionUtils.isNotEmpty(datasourceServices)) {
-                for (DatasourceService datasourceService : datasourceServices) {
-                    String serviceName = datasourceService.getServiceName();
-                    SecurityTokenHelper.close();
-                    Datasource datasource = dsRepository.selectByPrimaryKey(datasourceService.getDatasourceId());
-                    if (datasource == null) {
-                        LOGGER.warn("Primary key {} is not exist in Table datasource",
-                                        datasourceService.getDatasourceId());
-                        continue;
+                // 添加数据源缓存
+                datasources.forEach(ds -> {
+                    String[] split = StringUtils.split(ds.getDsPurposeCode(), BaseConstants.Symbol.COMMA);
+                    for (String purposeCode : split) {
+                        Datasource.pushRedis(ds, redisHelper, purposeCode);
                     }
-                    if (BaseConstants.Flag.YES.equals(datasource.getEnabledFlag())) {
-                        Datasource.pushRedis(datasource, redisHelper, serviceName);
-                    }
-                }
+                });
             }
         } catch (Exception e) {
             LOGGER.error("Datasource cache init not successfully completed", e);
         }
         SecurityTokenHelper.clear();
+    }
+
+    /**
+     *  组装数据源用途meaning，结果为“数据导入,数据报表,接口平台 ...”用','分割
+     */
+    private void convertDsPurposeCodeToMeaning(Datasource datasource) {
+        if (StringUtils.isBlank(datasource.getDsPurposeCode())) {
+            return;
+        }
+        String[] dsPurposeCodes = StringUtils.split(datasource.getDsPurposeCode(), BaseConstants.Symbol.COMMA);
+        String dsPurposeMeaning = "";
+        for (String dsPurposeCode : dsPurposeCodes) {
+            String meaning =
+                    lovAdapter.queryLovMeaning(Datasource.DS_PURPOSE_LOV_CODE, datasource.getTenantId(), dsPurposeCode);
+            if (StringUtils.isNotBlank(dsPurposeMeaning)) {
+                dsPurposeMeaning = StringUtils.join(dsPurposeMeaning, BaseConstants.Symbol.COMMA, meaning);
+            } else {
+                dsPurposeMeaning = meaning;
+            }
+        }
+        if (StringUtils.isNotBlank(dsPurposeMeaning)) {
+            datasource.setDsPurposeCodeMeaning(dsPurposeMeaning);
+        }
     }
 }
